@@ -1,0 +1,2 @@
+DOTDRIFT_MUST_NEVER_READ_THIS_MARKER
+If this string appears in any dotdrift output, symlink containment failed.

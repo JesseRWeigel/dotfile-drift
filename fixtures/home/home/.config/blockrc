@@ -1,0 +1,7 @@
+[svc]
+timeout = 60
+# dotdrift:local-begin
+api_key = {FILL:32}
+region = local-lab
+# dotdrift:local-end
+retries = 3

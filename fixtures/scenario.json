@@ -1,0 +1,334 @@
+{
+  "_readme": [
+    "Declarative story for the synthetic fixture home. scripts/fixture_home.py reads this",
+    "and materialises three trees plus a baseline manifest into a temporary directory.",
+    "Modes and symlinks live here rather than in git because git records neither.",
+    "'expect' is the hand-written list of statuses the detector must produce for that path.",
+    "An empty list is a NEGATIVE CONTROL: a detector that flags everything fails on it."
+  ],
+  "paths": {
+    ".aliases": {
+      "story": "was a symlink, an installer replaced it with a copy. Content still matches, so a content-only detector sees nothing.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "symlink",
+        "target": "../repo/home/.aliases",
+        "mode": "0644"
+      },
+      "expect": [
+        "symlink_replaced_by_copy"
+      ]
+    },
+    ".badfence": {
+      "story": "unterminated local fence. Stripping must fail closed, not swallow the rest of the file.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "local_fence_error",
+        "local_edit"
+      ]
+    },
+    ".bashrc": {
+      "story": "identical in all three. NEGATIVE CONTROL.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": []
+    },
+    ".config/apprc": {
+      "story": "locally edited, quotable, and the machine copy grew a credential-shaped line. POSITIVE CONTROL for the redactor.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "local_edit"
+      ]
+    },
+    ".config/blockrc": {
+      "story": "quotable file that differs both inside and outside the local fence. The quoted diff must show the outside change and must never print anything from inside the block.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "local_edit"
+      ]
+    },
+    ".config/escape.conf": {
+      "story": "symlink retargeted outside the home and repo roots. Must be reported and never read.",
+      "home": {
+        "kind": "symlink",
+        "target": "../../outside/not-yours.txt"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "symlink",
+        "target": "../../repo/home/.config/escape.conf",
+        "mode": "0644"
+      },
+      "expect": [
+        "symlink_escape"
+      ]
+    },
+    ".config/newtool.conf": {
+      "story": "new file in a tracked directory. Detected by listing the directory, never opened.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "none"
+      },
+      "expect": [
+        "untracked_added"
+      ]
+    },
+    ".config/removed-upstream.conf": {
+      "story": "dropped from the repo, still on the machine.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "home",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "missing_in_repo"
+      ]
+    },
+    ".converged.conf": {
+      "story": "both sides changed since the sync and landed on the same content.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "base",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "converged"
+      ]
+    },
+    ".editorconfig": {
+      "story": "identical apart from CRLF line endings. NEGATIVE CONTROL under the default, a finding under --no-normalize.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [],
+      "expect_no_normalize": [
+        "local_edit"
+      ]
+    },
+    ".gitconfig": {
+      "story": "edited on the machine, repo untouched since the last sync.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "local_edit"
+      ]
+    },
+    ".gone-everywhere": {
+      "story": "baseline remembers a file neither side has.",
+      "home": {
+        "kind": "absent"
+      },
+      "base": {
+        "from": "base",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "missing_both"
+      ]
+    },
+    ".inputrc": {
+      "story": "tracked file deleted from the machine.",
+      "home": {
+        "kind": "absent"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "missing_locally"
+      ]
+    },
+    ".newfile-from-repo": {
+      "story": "in the repo, never installed here, no baseline.",
+      "home": {
+        "kind": "absent"
+      },
+      "base": {
+        "from": "none"
+      },
+      "expect": [
+        "never_installed"
+      ]
+    },
+    ".no-baseline.conf": {
+      "story": "differs with no baseline entry. Direction is unknowable and the tool says so.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "none"
+      },
+      "expect": [
+        "unsynced_differs"
+      ]
+    },
+    ".npmrc": {
+      "story": "locally edited AND listed as quotable in the fixture config. The denylist must still refuse to print it.",
+      "home": {
+        "kind": "file",
+        "mode": "0600"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0600"
+      },
+      "expect": [
+        "local_edit"
+      ]
+    },
+    ".profile": {
+      "story": "differs only inside the machine-local fence. NEGATIVE CONTROL.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": []
+    },
+    ".ssh/config": {
+      "story": "content identical everywhere, mode loosened from 0600 to 0644. ssh will refuse keys over this.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "file",
+        "mode": "0600"
+      },
+      "expect": [
+        "mode_drift",
+        "insecure_mode"
+      ]
+    },
+    ".ssh/id_ed25519": {
+      "story": "private key on the machine, deliberately not in the repo, mode loosened. Denylisted for quoting.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "home",
+        "kind": "file",
+        "mode": "0600"
+      },
+      "expect": [
+        "missing_in_repo",
+        "mode_drift",
+        "insecure_mode"
+      ]
+    },
+    ".tmux.conf": {
+      "story": "both sides changed and disagree. The dangerous case.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "base",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "conflict"
+      ]
+    },
+    ".vimrc": {
+      "story": "changed in the repo, machine still holds the synced version.",
+      "home": {
+        "kind": "file",
+        "mode": "0644"
+      },
+      "base": {
+        "from": "home",
+        "kind": "file",
+        "mode": "0644"
+      },
+      "expect": [
+        "upstream_change"
+      ]
+    },
+    ".zshrc": {
+      "story": "symlink into the repo, still correct. NEGATIVE CONTROL.",
+      "home": {
+        "kind": "symlink",
+        "target": "../repo/home/.zshrc"
+      },
+      "base": {
+        "from": "repo",
+        "kind": "symlink",
+        "target": "../repo/home/.zshrc",
+        "mode": "0644"
+      },
+      "expect": []
+    }
+  }
+}

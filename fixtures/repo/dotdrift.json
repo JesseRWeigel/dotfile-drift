@@ -1,0 +1,14 @@
+{
+  "ignore": [],
+  "normalize_eol": true,
+  "quotable": [
+    ".config/apprc",
+    ".config/blockrc",
+    ".gitconfig",
+    ".npmrc",
+    ".tmux.conf"
+  ],
+  "strip_local_blocks": true,
+  "tracked_subdir": "home",
+  "watch_dirs": []
+}

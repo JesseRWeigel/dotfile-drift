@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*credentials*
+*secret*
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+.next/
+
+# Fixture dotfiles are synthetic and must always be tracked. Without this
+# negation the patterns above would silently drop a fixture named, for example,
+# fixtures/home/home/.aws/credentials, and the privacy scan's positive control
+# would then pass while reading nothing.
+!fixtures/**
+
+# Scratch output from the tool itself.
+dotdrift-capture/

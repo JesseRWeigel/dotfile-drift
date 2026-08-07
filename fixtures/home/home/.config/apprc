@@ -1,0 +1,4 @@
+[app]
+theme = light
+refresh = 30
+github_token = ghp_{FILL:36}

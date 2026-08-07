@@ -1,0 +1,6 @@
+[core]
+	autocrlf = input
+[init]
+	defaultBranch = main
+[alias]
+	st = status --short
