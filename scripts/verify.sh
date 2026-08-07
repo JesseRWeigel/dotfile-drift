@@ -281,35 +281,58 @@ quoting_posture() {
 }
 
 single_read_path() {
-  # Every read of a user path goes through safeio.read_entry. If a second
-  # open() appears elsewhere in the package, the containment rules have a hole
-  # that no unit test would necessarily find.
+  # Every read of a SCANNED path goes through safeio.read_entry, which is the one
+  # place the containment and no-follow rules live. A second reader elsewhere
+  # would be a hole no unit test necessarily finds.
+  #
+  # Exempting whole files here was the first attempt and it was nearly vacuous:
+  # five of the eight modules were on the exemption list, so the check could only
+  # fire in the three that never open anything anyway. Instead every filesystem
+  # read call in the package is COUNTED and pinned. A new one fails the check and
+  # has to be justified by editing this table, which is the point. The rationale
+  # for each entry says why it is not a scanned path.
   python3 - <<'PY'
-import ast, pathlib, sys
-bad = []
+import ast, collections, pathlib, sys
+
+# (module, call): (count, why this is not a read of a scanned path)
+EXPECTED = {
+    ("safeio.py", "open"):      (1, "os.open with O_NOFOLLOW, the only scanned-path read"),
+    ("safeio.py", "read"):      (1, "the read on that one descriptor"),
+    ("safeio.py", "scandir"):   (1, "lists names in an already-tracked directory, no content"),
+    ("compare.py", "walk"):     (1, "walks the REPO to enumerate tracked names, not the home"),
+    ("policy.py", "open"):      (3, "dotdrift.json in the repo root, our own config"),
+    ("manifest.py", "open"):    (2, "the baseline manifest in the state directory"),
+    ("actions.py", "open"):     (2, "writes during capture and apply, which are opt-in commands"),
+    ("cli.py", "open"):         (1, "writes the html report to the path the user named with -o"),
+}
+WATCHED = ("open", "read_bytes", "read_text", "walk", "scandir", "listdir", "read")
+
+seen = collections.Counter()
+sites = collections.defaultdict(list)
 for p in sorted(pathlib.Path("dotdrift").glob("*.py")):
     for node in ast.walk(ast.parse(p.read_text())):
         if not isinstance(node, ast.Call):
             continue
         f = node.func
         name = f.id if isinstance(f, ast.Name) else (f.attr if isinstance(f, ast.Attribute) else "")
-        if name in ("open", "read_bytes", "read_text"):
-            if p.name in ("safeio.py",):
-                continue
-            # policy.py and manifest.py open OUR OWN config and state files,
-            # which are named by the user on the command line and are not part
-            # of the scanned tree. Everything else is a finding.
-            if p.name in ("policy.py", "manifest.py", "report.py", "cli.py", "actions.py"):
-                continue
-            bad.append("%s:%d %s()" % (p, node.lineno, name))
-        if name in ("walk", "scandir", "listdir") and p.name not in ("safeio.py", "compare.py"):
-            bad.append("%s:%d %s()" % (p, node.lineno, name))
-if bad:
-    print("reads outside safeio:")
-    for b in bad:
-        print("  " + b)
+        if name in WATCHED:
+            seen[(p.name, name)] += 1
+            sites[(p.name, name)].append(node.lineno)
+
+problems = []
+for key in sorted(set(seen) | set(EXPECTED)):
+    got = seen.get(key, 0)
+    want = EXPECTED.get(key, (0, ""))[0]
+    if got != want:
+        problems.append("%s calls %s() %d time(s), the pinned count is %d (lines %s). "
+                        "If this is deliberate, add it to EXPECTED with a reason."
+                        % (key[0], key[1], got, want, sites.get(key, [])))
+if problems:
+    for p in problems:
+        print("  " + p)
     sys.exit(1)
-print("os.open on a scanned path happens only in safeio._open_regular_nofollow")
+print("%d filesystem read sites, all pinned; the only scanned-path read is "
+      "safeio._open_regular_nofollow" % sum(seen.values()))
 PY
 }
 
