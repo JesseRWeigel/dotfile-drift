@@ -39,6 +39,20 @@ B64 = ALNUM + "+/"
 
 TEMPLATE_RX = re.compile(r"\{(FILL|FILLB64):(\d+)\}")
 
+# The armour band of a PEM block is itself a credential pattern. GitHub push
+# protection matches it, and so does `scripts/privacy_scan.py`, which is scanning
+# this repository's own tracked files. The fixture private key therefore stores
+# the bands as templates for the same reason it stores the body as `{FILLB64:64}`:
+# no complete pattern exists on disk, and the exemption that would otherwise be
+# needed does not exist to be abused later.
+BAND_RX = re.compile(r"\{PEM(BEGIN|END):([A-Z ]{1,24})\}")
+
+
+def expand_bands(text: str) -> str:
+    return BAND_RX.sub(
+        lambda m: "-" * 5 + m.group(1) + " " + m.group(2) + " PRIVATE KEY" + "-" * 5,
+        text)
+
 DIR_MODES = {".ssh": 0o700, ".gnupg": 0o700}
 
 
@@ -75,11 +89,11 @@ def read_expanded(tree: str, rel: str):
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         return raw
-    if "{FILL" not in text:
+    if "{FILL" not in text and "{PEM" not in text:
         return raw
     # Expansion works on text, and the fixture with CRLF endings has no
     # templates, so no line ending is disturbed here.
-    return expand(text, rel).encode("utf-8")
+    return expand_bands(expand(text, rel)).encode("utf-8")
 
 
 def sha256_hex(data: bytes) -> str:
