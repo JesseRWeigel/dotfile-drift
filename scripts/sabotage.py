@@ -39,7 +39,6 @@ import hashlib
 import importlib.util
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -74,13 +73,61 @@ def _load_builder(tree: str):
     return mod
 
 
-def fingerprint(tree: str, workdir: str):
+# How the observable output is sampled. Each entry is one CLI invocation.
+#
+# The default samples the tool BOTH ways round. A single `--quote` run cannot see
+# a sabotage that removes the `--quote` requirement, because with the flag passed
+# the behaviour is identical either way. That is the "corpus too clean" shape from
+# AGENTS.md: the no-op was the measurement's fault, not the sabotage's.
+MEASURE_DEFAULT = (
+    ("quoted", ("--quote",)),
+    ("hash-only", ()),
+)
+
+# A dormant guard needs input that does NOT wake it. `.config/apprc` carries a
+# credential-shaped line on purpose, so any measurement including it makes the
+# redactor active and the guard classification meaningless. These three paths are
+# quotable and clean, which is what "normal output" means for a redactor.
+MEASURE_NO_SECRETS = (
+    ("quoted-clean-subset",
+     ("--quote", "--only", ".config/blockrc", "--only", ".tmux.conf", "--only", ".gitconfig")),
+)
+
+
+def _one_run(tree, paths, extra):
+    """Run the CLI once and return the text that will be hashed."""
+    proc = subprocess.run(
+        [sys.executable, os.path.join("bin", "dotdrift"), "check",
+         "--home", os.path.relpath(paths["home"], tree),
+         "--repo", os.path.relpath(paths["repo"], tree),
+         "--state", os.path.relpath(paths["state"], tree),
+         "--json"] + extra,
+        capture_output=True, text=True, cwd=tree, timeout=180)
+
+    if proc.returncode not in (0, 1) or not proc.stdout.strip():
+        return "CRASH exit=%d\n%s" % (proc.returncode, proc.stderr.strip()[-2000:]), None
+
+    try:
+        data = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        return "UNPARSEABLE %s\n%s" % (exc, proc.stdout[:2000]), None
+
+    data["home"] = "<home>"
+    data["repo"] = "<repo>"
+    # The exit code is observable output and belongs in the hash. Without it a
+    # sabotage that makes `check` always exit 0, so a cron hook reports a clean
+    # machine forever, scores as a no-op while being the worst bug in the tool.
+    body = "exit %d\n" % proc.returncode + json.dumps(data, indent=2, sort_keys=True)
+    return body, data
+
+
+def fingerprint(tree: str, workdir: str, measure=MEASURE_DEFAULT):
     """Hash the tool's report over the fixture home.
 
     Two rules keep this a function of the CODE and not of the DIRECTORY:
 
       * the fixture home is built inside `workdir`, and every absolute path in
-        the JSON is rewritten to a fixed label before hashing,
+        the output is rewritten to a fixed label before hashing,
       * the CLI is invoked with paths relative to `tree`, with `tree` as cwd.
 
     Returns (digest, summary_text). A crash is itself an observable outcome and
@@ -88,39 +135,29 @@ def fingerprint(tree: str, workdir: str):
     certainly changed the output.
     """
     builder = _load_builder(tree)
-    fx = os.path.join(workdir, "fx")
-    paths = builder.materialize(fx)
+    paths = builder.materialize(os.path.join(workdir, "fx"))
 
-    proc = subprocess.run(
-        [sys.executable, os.path.join("bin", "dotdrift"), "check",
-         "--home", os.path.relpath(paths["home"], tree),
-         "--repo", os.path.relpath(paths["repo"], tree),
-         "--state", os.path.relpath(paths["state"], tree),
-         "--quote", "--json"],
-        capture_output=True, text=True, cwd=tree, timeout=180)
+    chunks = []
+    notes = []
+    for label, extra in measure:
+        body, data = _one_run(tree, paths, list(extra))
+        chunks.append("### %s\n%s" % (label, body))
+        if data is None:
+            notes.append("%s=%s" % (label, body.split("\n", 1)[0]))
+        else:
+            notes.append("%s findings=%d ignored=%d"
+                         % (label, len(data["findings"]), len(data["ignored"])))
 
-    if proc.returncode not in (0, 1) or not proc.stdout.strip():
-        blob = "CRASH exit=%d\n%s" % (proc.returncode, proc.stderr.strip()[-2000:])
-        return hashlib.sha256(blob.encode()).hexdigest()[:16], blob
-
-    try:
-        data = json.loads(proc.stdout)
-    except json.JSONDecodeError as exc:
-        blob = "UNPARSEABLE %s\n%s" % (exc, proc.stdout[:2000])
-        return hashlib.sha256(blob.encode()).hexdigest()[:16], blob
-
+    text = "\n".join(chunks)
     # Scrub every path that could vary between runs. The 2026-08-06 incident was
     # exactly this: a per-run temporary directory inside the hashed text.
-    data["home"] = "<home>"
-    data["repo"] = "<repo>"
-    text = json.dumps(data, indent=2, sort_keys=True)
     for varying in (workdir, tree, os.path.realpath(workdir), os.path.realpath(tree),
                     tempfile.gettempdir(), PROJECT):
         text = text.replace(varying, "<scrubbed>")
 
-    summary = "exit=%d findings=%d ignored=%d %s" % (
-        proc.returncode, len(data["findings"]), len(data["ignored"]),
-        json.dumps(data["status_counts"], sort_keys=True))
+    summary = "  ".join(notes)
+    if "CRASH" in text:
+        summary = "CRASH " + summary
     return hashlib.sha256(text.encode()).hexdigest()[:16], summary
 
 
@@ -253,12 +290,17 @@ SABOTAGES = [
                      "        if False:")),
 
     # ---- normalisation ------------------------------------------------------
+    # The first anchor tried here was the `normalize: bool = True` DEFAULT in the
+    # signature, and it scored as a no-op. The default is never consulted: every
+    # caller passes the value as a keyword. That is the AGENTS.md trap of setting
+    # something the code path under test does not read. The fix was a better
+    # anchor, not a weaker check.
     dict(name="eol-noise-becomes-drift", kind=ATTACK,
          why="Stop normalising line endings, so a CRLF checkout reports every file "
              "as drifted and the report becomes noise nobody reads.",
          apply=patch("dotdrift/normalize.py",
-                     "def canonicalize(data: bytes, *, normalize: bool = True,",
-                     "def canonicalize(data: bytes, *, normalize: bool = False,")),
+                     "    if normalize:\n        work = normalize_eol(work)\n",
+                     "    if False:\n        work = normalize_eol(work)\n")),
 
     dict(name="fence-swallows-the-file", kind=ATTACK,
          why="Treat an unterminated fence as if it closed at EOF. The rest of the "
@@ -293,6 +335,7 @@ SABOTAGES = [
              "run whose quoted files are clean. The fixture deliberately plants a "
              "credential-shaped line in a quotable file, so the unit suite must "
              "fail even though the shape of the report is unchanged.",
+         measure=MEASURE_NO_SECRETS,
          apply=patch("dotdrift/redact.py",
                      "def redact_line(line: str):",
                      "def redact_line(line: str):\n    return line, []\n\n\ndef _unused(line: str):")),
@@ -303,7 +346,7 @@ SABOTAGES = [
 # Harness
 # --------------------------------------------------------------------------
 
-def score_one(sab, baseline_digest, verbose=False):
+def score_one(sab, baselines, verbose=False):
     with tempfile.TemporaryDirectory(prefix="dotdrift-sab-") as tmp:
         tree = copy_tree(os.path.join(tmp, "tree"))
         work = os.path.join(tmp, "work")
@@ -314,8 +357,9 @@ def score_one(sab, baseline_digest, verbose=False):
             return dict(name=sab["name"], kind=sab["kind"], gate1=False, gate2=None,
                         gate3=None, verdict="NO-OP", note=note)
 
-        digest, summary = fingerprint(tree, work)
-        moved = digest != baseline_digest
+        measure = sab.get("measure", MEASURE_DEFAULT)
+        digest, summary = fingerprint(tree, work, measure)
+        moved = digest != baselines[measure]
 
         units_pass, units_tail = run_units(tree)
         indep_pass = run_independent(tree)
@@ -365,19 +409,28 @@ def score_one(sab, baseline_digest, verbose=False):
                     caught_by=[])
 
 
-def null_control(baseline_digest, verbose=False):
+def null_control(baselines, verbose=False):
     """An unmodified copy must fingerprint identically to the baseline.
 
-    If it does not, gate 2 is free for every sabotage and the run is void.
+    Run for EVERY measurement set in use, not only the default one. A guard
+    measured a different way would otherwise get an unvalidated gate 2, which is
+    the same hole the null control exists to close.
+
+    Returns a list of (label, baseline, copy) for the sets that disagreed.
     """
+    bad = []
     with tempfile.TemporaryDirectory(prefix="dotdrift-null-") as tmp:
         tree = copy_tree(os.path.join(tmp, "tree"))
-        work = os.path.join(tmp, "work")
-        os.makedirs(work)
-        digest, summary = fingerprint(tree, work)
-    if verbose:
-        print("   copy fingerprint %s  %s" % (digest, summary))
-    return digest == baseline_digest, digest
+        for i, (measure, base) in enumerate(baselines.items()):
+            work = os.path.join(tmp, "work%d" % i)
+            os.makedirs(work)
+            digest, summary = fingerprint(tree, work, measure)
+            label = ",".join(m[0] for m in measure)
+            if verbose:
+                print("   copy [%s] %s  %s" % (label, digest, summary))
+            if digest != base:
+                bad.append((label, base, digest))
+    return bad
 
 
 def main(argv):
@@ -387,38 +440,50 @@ def main(argv):
     ap.add_argument("--only", default=None, help="run one sabotage by name")
     args = ap.parse_args(argv)
 
-    print("baseline: fingerprint the unmodified project in place")
-    with tempfile.TemporaryDirectory(prefix="dotdrift-base-") as tmp:
-        baseline_digest, baseline_summary = fingerprint(PROJECT, tmp)
-    print("   %s  %s" % (baseline_digest, baseline_summary))
-    if baseline_summary.startswith("CRASH"):
-        print("\nABORT: the unmodified tool does not run. Nothing below would mean anything.")
-        print(baseline_summary)
+    todo = [s for s in SABOTAGES if args.only is None or s["name"] == args.only]
+    if not todo:
+        print("no sabotage named %r" % args.only)
         return 2
+
+    measures = []
+    for s in todo:
+        m = s.get("measure", MEASURE_DEFAULT)
+        if m not in measures:
+            measures.append(m)
+
+    print("baseline: fingerprint the unmodified project in place")
+    baselines = {}
+    for i, measure in enumerate(measures):
+        with tempfile.TemporaryDirectory(prefix="dotdrift-base-") as tmp:
+            digest, summary = fingerprint(PROJECT, tmp, measure)
+        label = ",".join(m[0] for m in measure)
+        baselines[measure] = digest
+        print("   [%s] %s  %s" % (label, digest, summary))
+        if summary.startswith("CRASH"):
+            print("\nABORT: the unmodified tool does not run. Nothing below would mean anything.")
+            print(summary)
+            return 2
 
     print()
     print("NULL CONTROL: an untouched copy in a different directory must match")
-    ok, copy_digest = null_control(baseline_digest, verbose=args.verbose)
-    if not ok:
-        print("   FAIL baseline=%s copy=%s" % (baseline_digest, copy_digest))
+    bad = null_control(baselines, verbose=args.verbose)
+    if bad:
+        for label, base, copy in bad:
+            print("   FAIL [%s] baseline=%s copy=%s" % (label, base, copy))
         print()
         print("ABORT: the measurement tracks the working directory rather than the code.")
         print("Gate 2 would pass for free for every sabotage and the scores would be")
         print("meaningless. Scrub the path out of the fingerprint before rerunning.")
         return 2
-    print("   ok, %s in both. Gate 2 measures the code." % copy_digest)
-
-    todo = [s for s in SABOTAGES if args.only is None or s["name"] == args.only]
-    if not todo:
-        print("no sabotage named %r" % args.only)
-        return 2
+    print("   ok, all %d measurement set(s) reproduce exactly. Gate 2 measures the code."
+          % len(baselines))
 
     print()
     print("running %d sabotage(s)" % len(todo))
     results = []
     for i, sab in enumerate(todo, 1):
         print("  %2d/%d %-28s [%s]" % (i, len(todo), sab["name"], sab["kind"]))
-        r = score_one(sab, baseline_digest, verbose=args.verbose)
+        r = score_one(sab, baselines, verbose=args.verbose)
         results.append(r)
         print("      %-14s %s" % (r["verdict"], r["note"]))
 
