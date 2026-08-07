@@ -289,6 +289,31 @@ SABOTAGES = [
                      "        if not contained_in_any(allowed_roots, resolved):",
                      "        if False:")),
 
+    # These two are guards: they are dormant unless a symlink actually sits at a
+    # middle component, which the drifted fixture does not contain, so the report
+    # is unchanged and the unit suite carries them. Both were real holes found by
+    # probing rather than by reading, and both had a test nearby that passed
+    # because it exercised the `contained` helper instead of its caller.
+    dict(name="middle-symlink-read", kind=GUARD,
+         why="Drop the parent-directory containment check in read_entry. lstat "
+             "declines to follow only the FINAL component, so with ~/.config "
+             "symlinked elsewhere the tool reads and hashes a file from outside "
+             "the tracked tree and calls it an ordinary dotfile.",
+         apply=patch("dotdrift/safeio.py",
+                     "    if not contained_in_any(allowed_roots, parent):\n"
+                     "        e.kind = KIND_OTHER\n"
+                     "        e.unreadable = UNREADABLE_ESCAPES\n"
+                     "        return e\n",
+                     "    if False:\n        pass\n")),
+
+    dict(name="write-outside-the-home", kind=GUARD,
+         why="Drop the containment check on apply's destination. The tool takes "
+             "care never to READ outside the tracked tree and would then WRITE "
+             "outside it, which is the worse direction of the two.",
+         apply=patch("dotdrift/actions.py",
+                     "        if not safeio.contained(home_root, parent):",
+                     "        if False:")),
+
     # ---- normalisation ------------------------------------------------------
     # The first anchor tried here was the `normalize: bool = True` DEFAULT in the
     # signature, and it scored as a no-op. The default is never consulted: every

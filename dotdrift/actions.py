@@ -108,6 +108,17 @@ def apply(home_root: str, repo_root: str, res: compare.Result, policy, state_dir
     for rel, status in planned:
         dst = os.path.join(home_root, rel)
         base = res.baseline.get(rel) or {}
+
+        # Containment is checked on the WRITE side too, and it was not at first.
+        # The tool went to some trouble never to READ outside the tracked tree
+        # and would then happily WRITE outside it, which is the worse direction.
+        # With `~/.config` symlinked elsewhere, applying `.config/apprc` lands on
+        # a file this tool was never given permission to touch.
+        parent = os.path.dirname(dst) or home_root
+        if not safeio.contained(home_root, parent):
+            refused.append((rel, "destination resolves outside the home root, "
+                                 "refusing to write there"))
+            continue
         # Back up whatever is there now, including a symlink, before touching it.
         if os.path.lexists(dst):
             bpath = os.path.join(backup_dir, rel)

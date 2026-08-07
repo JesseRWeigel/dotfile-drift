@@ -119,6 +119,22 @@ def read_entry(root: str, rel: str, allowed_roots, max_bytes: int, want_content:
     """
     e = Entry(rel=rel)
     abspath = os.path.join(root, rel)
+
+    # A symlink at a MIDDLE component escapes just as effectively as one at the
+    # end, and lstat does not notice: it declines to follow only the FINAL
+    # component. With `~/.config` symlinked to a shared drive, which is an
+    # ordinary setup, `lstat(~/.config/apprc)` reports a plain regular file and
+    # the read below would happily return content from outside the tracked tree.
+    #
+    # `contained` realpaths both sides, so resolving the parent closes the whole
+    # class. There was a test for this, and it exercised `contained` directly
+    # rather than `read_entry`, so the helper was correct and the caller was not.
+    parent = os.path.dirname(abspath) or abspath
+    if not contained_in_any(allowed_roots, parent):
+        e.kind = KIND_OTHER
+        e.unreadable = UNREADABLE_ESCAPES
+        return e
+
     try:
         st = os.lstat(abspath)
     except FileNotFoundError:
@@ -200,6 +216,11 @@ def list_dir_names(root: str, rel: str):
         # os.path.join(root, "/etc") is "/etc". Refuse rather than list it.
         return []
     abspath = os.path.join(root, rel) if rel else root
+    # Same middle-component escape as in read_entry. Listing a directory reached
+    # through a symlink out of the tree would put foreign filenames, which are
+    # themselves private, into the report.
+    if not contained(root, abspath):
+        return []
     out = []
     try:
         with os.scandir(abspath) as it:

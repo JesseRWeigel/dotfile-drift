@@ -2,6 +2,7 @@
 parts where being wrong costs the user something."""
 
 import os
+import tempfile
 import unittest
 
 import support
@@ -206,3 +207,38 @@ class TestApply(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestApplyContainment(unittest.TestCase):
+    """`apply` writes, and the write side had no containment check at all.
+
+    The tool was careful never to READ outside the tracked tree and would then
+    write outside it, which is the worse direction of the two.
+    """
+
+    def test_apply_refuses_a_destination_that_resolves_outside_the_home(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            repo = os.path.join(d, "repo")
+            state = os.path.join(d, "state")
+            outside = os.path.join(d, "outside")
+            os.makedirs(os.path.join(repo, "home", ".config"))
+            os.makedirs(home)
+            os.makedirs(outside)
+            os.makedirs(state)
+            os.symlink(outside, os.path.join(home, ".config"))
+            with open(os.path.join(repo, "home", ".config", "apprc"), "w") as fh:
+                fh.write("theme = dark\n")
+
+            pol = policymod.load_policy(repo)
+            res = compare.Result()
+            res.findings.append(compare.Finding(
+                path=".config/apprc", status="upstream_change", direction="repo_ahead",
+                severity="warn", summary="", action="", command="", destructive=True))
+
+            out = actions.apply(home, repo, res, pol, state, confirm=True)
+            self.assertEqual(out["applied"], [])
+            self.assertEqual(len(out["refused"]), 1)
+            self.assertIn("outside the home root", out["refused"][0][1])
+            self.assertFalse(os.path.exists(os.path.join(outside, "apprc")),
+                             "apply wrote a file outside the home root")

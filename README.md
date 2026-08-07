@@ -141,7 +141,7 @@ An example report over that same fixture home is published at `docs/index.html`.
 bash scripts/verify.sh
 ```
 
-Its exit code is the result. Twelve checks over 148 unit tests, and a step that cannot run
+Its exit code is the result. Twelve checks over 153 unit tests, and a step that cannot run
 is a failure rather than a skip. It digests every tracked file before and after and fails if
 the run modified the tree. The test count in that sentence is asserted against the runner on
 every run, so it cannot go stale silently.
@@ -152,7 +152,7 @@ every run, so it cannot go stale silently.
 | `scripts/fixture_home.py` | materialises the synthetic home, repo, baseline and an outside-the-tree file |
 | `scripts/check_independent.py` | recomputes the classification without importing the package, proved with `ast` |
 | `scripts/privacy_scan.py` | credential and real-path scan over tracked files, with a positive control |
-| `scripts/sabotage.py` | breaks the detector fifteen ways under the three-gate rule |
+| `scripts/sabotage.py` | breaks the detector seventeen ways under the three-gate rule |
 | `scripts/build_docs.py` | regenerates `docs/index.html`, `--check` fails if it is stale |
 | `scripts/check_readme.py` | this file, ignoring fenced code blocks |
 
@@ -165,7 +165,7 @@ answers "drift" to everything fails.
 
 `scripts/sabotage.py` runs a null control first: an unmodified copy of the tree must
 fingerprint identically to the baseline, otherwise the measurement tracks the working
-directory rather than the code and the run is void. It then applies fifteen patches and
+directory rather than the code and the run is void. It then applies seventeen patches and
 requires each to change the observable output and be caught. The redactor is scored as a
 **guard**: it is dormant on clean input, so disabling it must leave normal output unchanged
 while the unit suite fails.

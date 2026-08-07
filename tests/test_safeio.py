@@ -37,6 +37,62 @@ class TestContainment(unittest.TestCase):
             self.assertFalse(safeio.contained(root, os.path.join(root, "link", "f")))
 
 
+class TestMiddleComponentEscape(unittest.TestCase):
+    """Regression: the test above only exercised the `contained` HELPER.
+
+    `read_entry` did not call it for a plain regular file, because `lstat`
+    declines to follow only the FINAL component. With `~/.config` symlinked
+    somewhere else, an ordinary setup, the tool read and hashed a file from
+    outside the tracked tree and reported it as a normal dotfile.
+    """
+
+    def _tree(self, d):
+        home = os.path.join(d, "home")
+        outside = os.path.join(d, "outside")
+        os.makedirs(home)
+        os.makedirs(outside)
+        with open(os.path.join(outside, "apprc"), "w") as fh:
+            fh.write("SECRET_FROM_OUTSIDE_THE_TREE\n")
+        os.symlink(outside, os.path.join(home, ".config"))
+        return home, outside
+
+    def test_a_symlinked_parent_directory_is_not_read(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, _ = self._tree(d)
+            e = safeio.read_entry(home, ".config/apprc", [home], 1 << 20)
+            self.assertEqual(e.unreadable, safeio.UNREADABLE_ESCAPES)
+            self.assertIsNone(e.data)
+            self.assertFalse(e.read_ok)
+            self.assertIsNone(e.raw_sha256)
+
+    def test_the_escaped_content_is_nowhere_in_the_entry(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, _ = self._tree(d)
+            e = safeio.read_entry(home, ".config/apprc", [home], 1 << 20)
+            self.assertNotIn("SECRET_FROM_OUTSIDE_THE_TREE", repr(e))
+
+    def test_a_symlinked_parent_directory_is_not_listed(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, _ = self._tree(d)
+            # Filenames outside the tree are private too, so the listing that
+            # finds newly added files must not reach through the link either.
+            self.assertEqual(safeio.list_dir_names(home, ".config"), [])
+
+    def test_an_ordinary_nested_directory_still_reads(self):
+        # NEGATIVE CONTROL. The fix must not refuse legitimate subdirectories,
+        # which would make every .config/* path unreadable and the tool useless.
+        with tempfile.TemporaryDirectory() as d:
+            home = os.path.join(d, "home")
+            os.makedirs(os.path.join(home, ".config"))
+            with open(os.path.join(home, ".config", "apprc"), "w") as fh:
+                fh.write("theme = dark\n")
+            e = safeio.read_entry(home, ".config/apprc", [home], 1 << 20)
+            self.assertTrue(e.read_ok)
+            self.assertEqual(e.data, b"theme = dark\n")
+            self.assertEqual([n for n, _, _ in safeio.list_dir_names(home, ".config")],
+                             ["apprc"])
+
+
 class TestEscapeIsNotRead(unittest.TestCase):
     def test_escaping_symlink_is_reported_and_never_opened(self):
         with support.Fixture() as fx:
