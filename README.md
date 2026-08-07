@@ -185,7 +185,7 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 148 tests in 0.360s
+Ran 148 tests in 0.414s
 
 OK
 148 tests, and README.md agrees
@@ -207,7 +207,7 @@ the escaping symlink was reported without its target being read
 ok   quoting posture
 
 === single read path ===
-os.open on a scanned path happens only in safeio._open_regular_nofollow
+12 filesystem read sites, all pinned; the only scanned-path read is safeio._open_regular_nofollow
 ok   single read path
 
 === independent recomputation ===
