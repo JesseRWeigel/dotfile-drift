@@ -175,7 +175,163 @@ while the unit suite fails.
 Real pasted output of `bash scripts/verify.sh`, run from a clean shell.
 
 ```
-PASTE_PENDING
+dotdrift verify
+repo ~/Projects/thousand/projects/dotfile-drift
+77 tracked files digested before the run
+
+=== preflight ===
+python3 3.12.3
+dotdrift imports 12 stdlib modules and nothing else
+ok   preflight
+
+=== unit tests ===
+Ran 148 tests in 0.360s
+
+OK
+148 tests, and README.md agrees
+ok   unit tests
+
+=== end to end over the fixture ===
+drifted fixture: exit 1 as expected
+converged tree: exit 0, zero findings
+missing home: exit 2, distinct from both clean and drifted
+ok   end to end over the fixture
+
+=== quoting posture ===
+hash-only by default: no content block without --quote
+denylist beats quotable for .npmrc
+redactor fired on .config/apprc
+the raw credential (40 chars) appears nowhere in the report
+fenced machine-local content is never printed
+the escaping symlink was reported without its target being read
+ok   quoting posture
+
+=== single read path ===
+os.open on a scanned path happens only in safeio._open_regular_nofollow
+ok   single read path
+
+=== independent recomputation ===
+1. import graph (ast, not grep)
+   ok, nothing in this script's import graph reaches 'dotdrift'
+2. content classification, recomputed with blake2b over line tuples
+   ok, 8 content classifications agree
+3. structural axes: kind, mode, existence, containment
+   ok, symlink kind change,         1 path(s)
+   ok, mode change,                 2 path(s)
+   ok, missing from the machine,    2 path(s)
+   ok, missing from the repo,       2 path(s)
+   ok, escaping symlink,            1 path(s)
+   ok, converged,                   1 path(s)
+4. both against the hand-written scenario expectations
+   ok, 18 paths match scenario.json
+5. negative controls
+   ok, .bashrc is clean in both computations
+   ok, .editorconfig is clean in both computations
+   ok, .profile is clean in both computations
+   ok, .zshrc is clean in both computations
+6. the escaped file's content never appears in the tool's output
+   ok, marker absent
+
+INDEPENDENT CHECK PASSED
+ok   independent recomputation
+
+=== privacy scan ===
+1. positive control: plant credentials and require them to be found
+   ok, 7 planted hits found, one of them behind a NUL byte, and 3 relative paths correctly left alone
+2. tracked files
+   ok, git reports 77 tracked files
+3. scan for credentials and machine paths
+   read 77 files (0 containing a NUL byte, scanned anyway)
+   ok, no credential-shaped string and no path from this machine
+4. the scan read its own source and the sabotage script
+   ok, scripts/privacy_scan.py is tracked and was scanned with no exemption
+   ok, scripts/sabotage.py is tracked and was scanned with no exemption
+
+PRIVACY SCAN PASSED
+ok   privacy scan
+
+=== published page ===
+ok, docs/index.html matches a fresh build (46775 bytes)
+the page carries real rendered findings and leaks nothing withheld
+ok   published page
+
+=== pages workflow ===
+concurrency group is per-run
+docs/index.html present
+ok   pages workflow
+
+=== README ===
+  prose and fenced blocks separated
+  Status carries a real success line: 12 of 12 checks
+  README has every required section, no scaffold markers in prose, and a real transcript
+ok   README
+
+=== sabotage ===
+baseline: fingerprint the unmodified project in place
+   [quoted,hash-only] 9e593fc32c9b39a8  quoted findings=22 ignored=2  hash-only findings=22 ignored=2
+   [quoted-clean-subset] 64a1c067622eb17c  quoted-clean-subset findings=3 ignored=0
+
+NULL CONTROL: an untouched copy in a different directory must match
+   ok, all 2 measurement set(s) reproduce exactly. Gate 2 measures the code.
+
+running 15 sabotage(s)
+   1/15 direction-flip               [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   2/15 ignore-the-baseline          [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   3/15 conflict-becomes-local-edit  [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   4/15 symlink-blindness            [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   5/15 mode-blindness               [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   6/15 insecure-mode-blindness      [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+   7/15 denylist-disabled            [attack]
+      CAUGHT         caught by unit suite, docs freshness
+   8/15 quote-without-the-flag       [attack]
+      CAUGHT         caught by unit suite
+   9/15 fence-contents-leak          [attack]
+      CAUGHT         caught by unit suite, docs freshness
+  10/15 follow-the-escaping-symlink  [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+  11/15 eol-noise-becomes-drift      [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+  12/15 fence-swallows-the-file      [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+  13/15 drift-never-exits-nonzero    [attack]
+      CAUGHT         caught by unit suite
+  14/15 untracked-scan-off           [attack]
+      CAUGHT         caught by unit suite, independent check, docs freshness
+  15/15 redactor-disabled            [guard]
+      CAUGHT         output unchanged as a guard requires, and the unit suite failed
+
+SABOTAGE                     KIND    GATE1  GATE2  GATE3  VERDICT
+direction-flip               attack  yes    yes    yes    CAUGHT
+ignore-the-baseline          attack  yes    yes    yes    CAUGHT
+conflict-becomes-local-edit  attack  yes    yes    yes    CAUGHT
+symlink-blindness            attack  yes    yes    yes    CAUGHT
+mode-blindness               attack  yes    yes    yes    CAUGHT
+insecure-mode-blindness      attack  yes    yes    yes    CAUGHT
+denylist-disabled            attack  yes    yes    yes    CAUGHT
+quote-without-the-flag       attack  yes    yes    yes    CAUGHT
+fence-contents-leak          attack  yes    yes    yes    CAUGHT
+follow-the-escaping-symlink  attack  yes    yes    yes    CAUGHT
+eol-noise-becomes-drift      attack  yes    yes    yes    CAUGHT
+fence-swallows-the-file      attack  yes    yes    yes    CAUGHT
+drift-never-exits-nonzero    attack  yes    yes    yes    CAUGHT
+untracked-scan-off           attack  yes    yes    yes    CAUGHT
+redactor-disabled            guard   yes    yes    yes    CAUGHT
+
+15 of 15 caught
+SABOTAGE RUN PASSED, every sabotage applied, moved the measured output (or stayed dormant as a guard must), and was caught
+ok   sabotage
+
+=== tree not modified ===
+ok   all 77 tracked files unchanged
+
+----------------------------------------
+VERIFY PASSED: 12/12 checks
 ```
 
 ## Unfinished
