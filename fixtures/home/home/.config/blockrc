@@ -2,6 +2,6 @@
 timeout = 60
 # dotdrift:local-begin
 api_key = {FILL:32}
-region = local-lab
+region = MACHINE_LOCAL_SECRET_local-lab
 # dotdrift:local-end
 retries = 3

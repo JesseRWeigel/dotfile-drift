@@ -1,0 +1,44 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Per-run group, never `group: pages`. One wedged run holds that shared lock and
+# every later deploy queues behind it, and a wedged run cannot always be
+# cancelled from the UI.
+concurrency:
+  group: pages-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The full suite, sabotage harness included. The published page is
+      # regenerated and diffed inside it, so a stale page fails the build rather
+      # than being deployed.
+      - name: verify
+        run: bash scripts/verify.sh
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4
