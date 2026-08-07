@@ -186,7 +186,7 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 160 tests in 0.422s
+Ran 160 tests in 0.444s
 
 OK
 160 tests, and README.md agrees
@@ -243,13 +243,13 @@ ok   independent recomputation
    ok, git reports 77 tracked files
 3. scan for credentials and machine paths
    read 77 files (0 containing a NUL byte, scanned anyway)
-   FAIL tests/test_redact.py:199  absolute-home-path  /home/runner
+   ok, no credential-shaped string and no path from this machine
 4. the scan read its own source and the sabotage script
    ok, scripts/privacy_scan.py is tracked and was scanned with no exemption
    ok, scripts/sabotage.py is tracked and was scanned with no exemption
 
-PRIVACY SCAN FAILED with 1 problem(s)
-FAIL privacy scan
+PRIVACY SCAN PASSED
+ok   privacy scan
 
 === published page ===
 ok, docs/index.html matches a fresh build (46775 bytes)
@@ -338,8 +338,7 @@ ok   sabotage
 ok   all 77 tracked files unchanged
 
 ----------------------------------------
-VERIFY FAILED: 1 of 12 checks failed
-  - privacy scan
+VERIFY PASSED: 12/12 checks
 ```
 
 ## Unfinished
