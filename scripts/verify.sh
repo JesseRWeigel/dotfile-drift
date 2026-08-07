@@ -415,6 +415,14 @@ echo "repo $(tilde "$PROJECT")"
 
 BEFORE="$(digest_tree)"
 BEFORE_N="$(printf '%s\n' "$BEFORE" | grep -c . || true)"
+portable_scan() {
+  # The scan builds patterns from the current username, so its result depends on who runs it.
+  # This substitutes usernames that are ordinary English words and requires it to stay clean.
+  # Without it, a machine whose username is a common word only finds out in CI, which is what
+  # happened here: the hosted runner is called `runner` and "the node test runner" read as a leak.
+  python3 scripts/check_portable_scan.py
+}
+
 echo "$BEFORE_N tracked files digested before the run"
 
 step "preflight"                    preflight
@@ -424,6 +432,7 @@ step "quoting posture"              quoting_posture
 step "single read path"             single_read_path
 step "independent recomputation"    independent_check
 step "privacy scan"                 privacy_scan
+step "scan is username independent" portable_scan
 step "published page"               published_page
 step "pages workflow"               pages_workflow
 step "README"                       readme_check

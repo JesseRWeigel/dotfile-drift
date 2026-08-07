@@ -186,7 +186,7 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 160 tests in 0.444s
+Ran 160 tests in 0.411s
 
 OK
 160 tests, and README.md agrees
@@ -251,6 +251,15 @@ ok   independent recomputation
 PRIVACY SCAN PASSED
 ok   privacy scan
 
+=== scan is username independent ===
+  ok   as user 'runner': clean across 77 tracked files
+  ok   as user 'build': clean across 77 tracked files
+  ok   as user 'test': clean across 77 tracked files
+  ok   as user 'admin': clean across 77 tracked files
+  ok   as user 'node': clean across 77 tracked files
+  ok   as user 'user': clean across 77 tracked files
+ok   scan is username independent
+
 === published page ===
 ok, docs/index.html matches a fresh build (46775 bytes)
 the page carries real rendered findings and leaks nothing withheld
@@ -263,7 +272,7 @@ ok   pages workflow
 
 === README ===
   prose and fenced blocks separated
-  Status carries a real success line: 12 of 12 checks
+  Status carries a real success line: 13 of 13 checks
   README has every required section, no scaffold markers in prose, and a real transcript
 ok   README
 
@@ -338,7 +347,7 @@ ok   sabotage
 ok   all 77 tracked files unchanged
 
 ----------------------------------------
-VERIFY PASSED: 12/12 checks
+VERIFY PASSED: 13/13 checks
 ```
 
 ## Unfinished

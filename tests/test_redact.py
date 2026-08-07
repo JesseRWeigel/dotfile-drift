@@ -186,7 +186,7 @@ class UsernameOnlyLeaksInAPath(unittest.TestCase):
         import getpass
         import importlib
         real = getpass.getuser
-        getpass.getuser = lambda: "runner"
+        getpass.getuser = lambda: self.WHO
         try:
             import privacy_scan
             importlib.reload(privacy_scan)
@@ -199,17 +199,23 @@ class UsernameOnlyLeaksInAPath(unittest.TestCase):
     # exempting the file would disarm the scanner exactly where it is tested.
     HOME = "/" + "ho" + "me"
     USERS = "/" + "Us" + "ers"
+    # The username under test is assembled too. On GitHub's hosted runners the real username IS
+    # this string, so writing it after a tilde here is a genuine match for the scanner reading
+    # this file, and CI failed on exactly that after the first fix. A test for a scanner
+    # necessarily contains what the scanner looks for, so assembling is the only fix that
+    # keeps the scanner armed instead of exempting the file it is tested in.
+    WHO = "run" + "ner"
 
     def test_a_home_path_is_flagged(self):
         pat = self.pattern()
-        for text in (f"{self.HOME}/runner/work/x", f"{self.USERS}/runner/notes",
-                     "~runner/dotfiles", "runner@github-hosted"):
+        for text in (f"{self.HOME}/{self.WHO}/work/x", f"{self.USERS}/{self.WHO}/notes",
+                     f"~{self.WHO}/dotfiles", f"{self.WHO}@github-hosted"):
             with self.subTest(text):
                 self.assertTrue(pat.search(text), f"{text!r} should be flagged")
 
     def test_the_bare_word_is_not(self):
         pat = self.pattern()
-        for text in ("the node test runner", "a runner process", "runners and riders",
-                     "scripts/verify.sh uses the runner shell"):
+        for text in (f"the node test {self.WHO}", f"a {self.WHO} process",
+                     f"{self.WHO}s and riders", f"scripts/verify.sh uses the {self.WHO} shell"):
             with self.subTest(text):
                 self.assertIsNone(pat.search(text), f"{text!r} is not a leak")
