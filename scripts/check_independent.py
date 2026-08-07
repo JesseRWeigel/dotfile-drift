@@ -149,13 +149,6 @@ def _dynamic_kind(node: ast.Call):
     return None
 
 
-def _literal_arg(node: ast.Call):
-    for arg in list(node.args) + [kw.value for kw in node.keywords]:
-        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-            return arg.value
-    return None
-
-
 def prove_no_package_imports(entry: str, verbose=False):
     walk = ImportWalk()
     walk.visit_file(entry)
@@ -166,35 +159,41 @@ def prove_no_package_imports(entry: str, verbose=False):
     problems = []
     for name, sites in sorted(walk.static.items()):
         root = name.lstrip(".").split(".")[0]
-        if root == FORBIDDEN_PACKAGE:
-            for f, ln in sites:
-                problems.append("%s:%d imports %s" % (os.path.relpath(f, PROJECT), ln, name))
-        if name.startswith("."):
-            for f, ln in sites:
+        for f, ln in sites:
+            rel = os.path.relpath(f, PROJECT)
+            if root == FORBIDDEN_PACKAGE:
+                problems.append("%s:%d imports %s" % (rel, ln, name))
+            elif name.startswith("."):
                 problems.append("%s:%d uses a relative import, which could resolve into "
-                                "the package" % (os.path.relpath(f, PROJECT), ln))
+                                "the package" % (rel, ln))
+            elif root not in sys.stdlib_module_names:
+                # Nothing here recurses into third-party or local modules, so an
+                # import that is not stdlib is an unproved edge in the graph. A
+                # module we do not walk could import the package on our behalf.
+                problems.append("%s:%d imports %r, which is neither stdlib nor walked, "
+                                "so its own imports are unproved" % (rel, ln, name))
 
-    for f, ln, kind, literal in walk.dynamic:
+    for f, ln, kind, resolved, all_known in walk.dynamic:
         rel = os.path.relpath(f, PROJECT)
-        if kind in ("exec", "eval", "compile"):
+        if kind in ("exec", "eval", "compile", "__import__"):
             problems.append("%s:%d uses %s(), which can import anything" % (rel, ln, kind))
             continue
-        if literal is None:
-            problems.append("%s:%d calls %s() with a non-literal argument, so the "
-                            "import graph cannot be proved" % (rel, ln, kind))
-            continue
         if kind in ("exec_module", "module_from_spec"):
-            continue  # these take the spec produced by an already-checked call
-        resolved = str((pathlib.Path(f).parent / literal).resolve()) if "/" in literal else literal
-        if resolved not in ALLOWED_DYNAMIC and literal not in ALLOWED_DYNAMIC:
-            problems.append("%s:%d dynamically loads %r, which is not on the allow list"
-                            % (rel, ln, literal))
+            continue  # these take a spec produced by an already-checked call
+        if not all_known:
+            problems.append("%s:%d calls %s() with an argument this checker cannot fold, "
+                            "so the import graph cannot be proved" % (rel, ln, kind))
+            continue
+        if not (resolved & ALLOWED_DYNAMIC):
+            problems.append("%s:%d dynamically loads %s, which is not on the allow list"
+                            % (rel, ln, sorted(resolved)))
 
     if verbose:
         print("  import graph: %d files, %d distinct static imports, %d dynamic calls"
               % (len(walk.visited), len(walk.static), len(walk.dynamic)))
         print("  files walked: %s"
               % ", ".join(sorted(os.path.relpath(p, PROJECT) for p in walk.visited)))
+        print("  static imports: %s" % ", ".join(sorted(walk.static)))
     return problems
 
 
