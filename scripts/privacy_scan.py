@@ -105,7 +105,14 @@ def machine_path_patterns():
     except Exception:  # noqa: BLE001 - no controlling terminal, no passwd entry
         user = None
     if user and len(user) >= 3:
-        pats.append(("this-machine-username", re.compile(re.escape(user))))
+        # ONLY in a path-shaped context. A bare match on the username fails wherever the username
+        # is an ordinary word: on GitHub's runners it is `runner`, which appears legitimately in
+        # "the node test runner" and flagged three files that leak nothing. What is private is a
+        # path that identifies the machine, not the word.
+        u = re.escape(user)
+        pats.append(("this-machine-username", re.compile(
+            r"(?:/home/|/Users/|/var/home/|\\Users\\|~)" + u + r"(?![\w.-])"
+            r"|(?<![\w.-])" + u + r"@[\w.-]+")))
     home = os.path.expanduser("~")
     if home and home not in ("/", "~") and len(home) >= 4:
         pats.append(("this-machine-home", re.compile(re.escape(home))))

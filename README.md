@@ -141,7 +141,7 @@ An example report over that same fixture home is published at `docs/index.html`.
 bash scripts/verify.sh
 ```
 
-Its exit code is the result. Twelve checks over 158 unit tests, and a step that cannot run
+Its exit code is the result. Twelve checks over 160 unit tests, and a step that cannot run
 is a failure rather than a skip. It digests every tracked file before and after and fails if
 the run modified the tree. The test count in that sentence is asserted against the runner on
 every run, so it cannot go stale silently.
@@ -186,10 +186,10 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 158 tests in 0.408s
+Ran 160 tests in 0.422s
 
 OK
-158 tests, and README.md agrees
+160 tests, and README.md agrees
 ok   unit tests
 
 === end to end over the fixture ===
@@ -243,13 +243,13 @@ ok   independent recomputation
    ok, git reports 77 tracked files
 3. scan for credentials and machine paths
    read 77 files (0 containing a NUL byte, scanned anyway)
-   ok, no credential-shaped string and no path from this machine
+   FAIL tests/test_redact.py:199  absolute-home-path  /home/runner
 4. the scan read its own source and the sabotage script
    ok, scripts/privacy_scan.py is tracked and was scanned with no exemption
    ok, scripts/sabotage.py is tracked and was scanned with no exemption
 
-PRIVACY SCAN PASSED
-ok   privacy scan
+PRIVACY SCAN FAILED with 1 problem(s)
+FAIL privacy scan
 
 === published page ===
 ok, docs/index.html matches a fresh build (46775 bytes)
@@ -338,7 +338,8 @@ ok   sabotage
 ok   all 77 tracked files unchanged
 
 ----------------------------------------
-VERIFY PASSED: 12/12 checks
+VERIFY FAILED: 1 of 12 checks failed
+  - privacy scan
 ```
 
 ## Unfinished

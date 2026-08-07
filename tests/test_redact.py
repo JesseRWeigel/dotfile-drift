@@ -7,6 +7,7 @@ privacy scan and GitHub push protection, and push protection scans full history
 so a later fix does not help.
 """
 
+import pathlib
 import unittest
 
 import support  # noqa: F401
@@ -169,3 +170,40 @@ class JwtIsRedactedWhole(unittest.TestCase):
                      "alias gs='git status'", "[user]", "  name = A Person", "set -o vi"):
             with self.subTest(line):
                 self.assertEqual(redact.redact_line(line)[0], line)
+
+
+class UsernameOnlyLeaksInAPath(unittest.TestCase):
+    """The machine-username pattern must need a path context.
+
+    A bare match on the username fails wherever the username is an ordinary word. On GitHub's
+    hosted runners it is `runner`, and the CI deploy failed on three files whose only offence was
+    the phrase "the node test runner". What identifies a machine is a path, not a word.
+    """
+
+    def pattern(self):
+        import sys
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "scripts"))
+        import getpass
+        import importlib
+        real = getpass.getuser
+        getpass.getuser = lambda: "runner"
+        try:
+            import privacy_scan
+            importlib.reload(privacy_scan)
+            return dict(privacy_scan.machine_path_patterns())["this-machine-username"]
+        finally:
+            getpass.getuser = real
+
+    def test_a_home_path_is_flagged(self):
+        pat = self.pattern()
+        for text in ("/home/runner/work/x", "/Users/runner/notes", "~runner/dotfiles",
+                     "runner@github-hosted"):
+            with self.subTest(text):
+                self.assertTrue(pat.search(text), f"{text!r} should be flagged")
+
+    def test_the_bare_word_is_not(self):
+        pat = self.pattern()
+        for text in ("the node test runner", "a runner process", "runners and riders",
+                     "scripts/verify.sh uses the runner shell"):
+            with self.subTest(text):
+                self.assertIsNone(pat.search(text), f"{text!r} is not a leak")
