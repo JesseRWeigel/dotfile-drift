@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dotdrift example report</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7; --fg: #1c1b19; --muted: #5f5b54; --line: #ddd8cf; --card: #fff;
+  --high: #a3231b; --warn: #8a5a00; --info: #3a5f7d; --code: #f2efe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #14150f; --fg: #e9e6df; --muted: #a09a90; --line: #2f312a;
+           --card: #1b1d16; --high: #ef6f65; --warn: #d7a44a; --info: #7fb0d1; --code: #23261e; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+main { max-width: 62rem; margin: 0 auto; padding: 2rem 1.1rem 4rem; }
+h1 { font-size: 1.5rem; margin: 0 0 .3rem; }
+h2 { font-size: 1.05rem; margin: 2rem 0 .6rem; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--muted); }
+p.lede { color: var(--muted); margin: 0 0 1.4rem; max-width: 46rem; }
+.tiles { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); }
+.tile { border: 1px solid var(--line); background: var(--card); padding: .7rem .8rem; border-radius: 3px; }
+.tile b { display: block; font-size: 1.5rem; line-height: 1.1; }
+.tile span { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; }
+dl.ctx { display: grid; grid-template-columns: auto 1fr; gap: .15rem .9rem; margin: 1.2rem 0 0; }
+dl.ctx dt { color: var(--muted); }
+dl.ctx dd { margin: 0; }
+article.f { border: 1px solid var(--line); border-left: 4px solid var(--info);
+  background: var(--card); padding: .7rem .9rem; margin: .6rem 0; border-radius: 3px; }
+article.high { border-left-color: var(--high); }
+article.warn { border-left-color: var(--warn); }
+article.f header { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+.sev { font-weight: 700; font-size: .78rem; letter-spacing: .08em; }
+.high .sev { color: var(--high); } .warn .sev { color: var(--warn); } .info .sev { color: var(--info); }
+.status { color: var(--muted); font-size: .8rem; }
+.summary { margin: .35rem 0; }
+.meta, .cmd, .action { margin: .2rem 0; color: var(--muted); font-size: .87rem; }
+.action { color: var(--fg); }
+code { background: var(--code); padding: .05rem .3rem; border-radius: 2px; }
+.destr { color: var(--high); }
+.withheld { color: var(--muted); font-style: italic; margin: .3rem 0 0; }
+.quote { margin-top: .5rem; }
+.redact { color: var(--warn); margin: 0 0 .3rem; font-size: .85rem; }
+pre { background: var(--code); padding: .7rem .8rem; border-radius: 3px;
+  overflow-x: auto; margin: 0; font-size: .85rem; }
+ul { padding-left: 1.2rem; }
+.hint { color: var(--muted); font-size: .85rem; }
+details pre { max-height: 26rem; overflow: auto; }
+footer { margin-top: 3rem; color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line);
+  padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>dotdrift example report</h1>
+<p class="lede">Generated over the synthetic fixture home that ships with the repository. No file
+from a real machine was read to produce this page. Content is withheld by default: a path is
+quoted only when the user listed it as quotable, it is not on the denylist, and the redactor has
+passed over it.</p>
+
+<div class="tiles">
+  <div class="tile"><b>21</b><span>paths checked</span></div>
+  <div class="tile"><b>4</b><span>clean</span></div>
+  <div class="tile"><b>7</b><span>high</span></div>
+  <div class="tile"><b>12</b><span>warn</span></div>
+  <div class="tile"><b>3</b><span>info</span></div>
+</div>
+
+<dl class="ctx">
+  <dt>home</dt><dd><code>&lt;synthetic fixture home&gt;</code></dd>
+  <dt>repo</dt><dd><code>&lt;synthetic fixture dotfiles repo&gt;</code></dd>
+  <dt>baseline</dt><dd>2026-02-14T09:30:00Z &middot; 19 entries</dd>
+</dl>
+
+<h2>Findings</h2>
+<article class="f high"><header><span class="sev">HIGH</span><code>.config/escape.conf</code><span class="status">symlink_escape</span></header><p class="summary">symlink resolves outside the home and repo roots, so it was NOT read</p><p class="meta">repo <code>86bcf762fd24</code> home <code>-</code> base <code>86bcf762fd24</code> &middot; kind repo/home/base <code>file/symlink/symlink</code> &middot; direction <b>unknown</b></p><p class="action">Point it back inside the tracked tree, or add it to `ignore`.</p><p class="cmd"><code>dotdrift deny &#x27;.config/escape.conf&#x27;</code></p></article><article class="f high"><header><span class="sev">HIGH</span><code>.no-baseline.conf</code><span class="status">unsynced_differs</span></header><p class="summary">repo and machine differ and there is no baseline to say which is newer</p><p class="meta">repo <code>6702989ef95f</code> home <code>9f621742d556</code> base <code>-</code> &middot; kind repo/home/base <code>file/file/-</code> &middot; direction <b>unknown</b></p><p class="action">Inspect both sides yourself. dotdrift will not guess a direction without a baseline.</p><p class="cmd"><code>dotdrift check --only .no-baseline.conf --quote</code></p><p class="withheld">content withheld: not listed in quotable</p></article><article class="f high"><header><span class="sev">HIGH</span><code>.ssh/config</code><span class="status">insecure_mode</span></header><p class="summary">permissions are looser than this kind of file allows</p><p class="meta">repo <code>dcb1ac195d3f</code> home <code>dcb1ac195d3f</code> base <code>dcb1ac195d3f</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>none</b></p><p class="action">Tighten the mode. ssh refuses to use a config or key that others can read.</p><p class="cmd"><code>chmod go-rwx &lt;path&gt;</code></p></article><article class="f high"><header><span class="sev">HIGH</span><code>.ssh/config</code><span class="status">mode_drift</span></header><p class="summary">permission bits changed since the last sync</p><p class="meta">repo <code>dcb1ac195d3f</code> home <code>dcb1ac195d3f</code> base <code>dcb1ac195d3f</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Restore the recorded mode, or sync if the new mode is intended.</p><p class="cmd"><code>dotdrift apply --only .ssh/config --yes</code></p></article><article class="f high"><header><span class="sev">HIGH</span><code>.ssh/id_ed25519</code><span class="status">insecure_mode</span></header><p class="summary">permissions are looser than this kind of file allows</p><p class="meta">repo <code>-</code> home <code>5f571e0c8680</code> base <code>5f571e0c8680</code> &middot; kind repo/home/base <code>missing/file/file</code> &middot; direction <b>none</b></p><p class="action">Tighten the mode. ssh refuses to use a config or key that others can read.</p><p class="cmd"><code>chmod go-rwx &lt;path&gt;</code></p></article><article class="f high"><header><span class="sev">HIGH</span><code>.ssh/id_ed25519</code><span class="status">mode_drift</span></header><p class="summary">permission bits changed since the last sync</p><p class="meta">repo <code>-</code> home <code>5f571e0c8680</code> base <code>5f571e0c8680</code> &middot; kind repo/home/base <code>missing/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Restore the recorded mode, or sync if the new mode is intended.</p><p class="cmd"><code>dotdrift apply --only .ssh/id_ed25519 --yes</code></p></article><article class="f high"><header><span class="sev">HIGH</span><code>.tmux.conf</code><span class="status">conflict</span></header><p class="summary">both sides changed since the last sync and they no longer agree</p><p class="meta">repo <code>970877cab0d0</code> home <code>ffd042852cf1</code> base <code>722ca6a8b432</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>diverged</b></p><p class="action">Merge by hand. Do not restore from the repo, that would discard the machine edit.</p><p class="cmd"><code>dotdrift check --only .tmux.conf --quote</code></p><div class="quote"><pre>--- repo/.tmux.conf
++++ home/.tmux.conf
+@@ -1,4 +1,4 @@
+ set -g mouse on
+-set -g history-limit 50000
+-set -g base-index 1
++set -g history-limit 5000
++set -g status-position top
+ </pre></div></article><article class="f warn"><header><span class="sev">WARN</span><code>.aliases</code><span class="status">symlink_replaced_by_copy</span></header><p class="summary">was a symlink into the repo at last sync, now a regular file. Content still matches the repo, so nothing is lost yet, but future repo changes will no longer reach this machine.</p><p class="meta">repo <code>b4716459c6d0</code> home <code>b4716459c6d0</code> base <code>b4716459c6d0</code> &middot; kind repo/home/base <code>file/file/symlink</code> &middot; direction <b>machine_ahead</b></p><p class="action">An installer overwrote the link. Re-link it so repo changes reach this machine again.</p><p class="cmd"><code>dotdrift apply --only .aliases --yes</code> <span class="destr">overwrites the live file</span></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.badfence</code><span class="status">local_edit</span></header><p class="summary">changed on this machine since the last sync, repo untouched</p><p class="meta">repo <code>e9024f1a07d2</code> home <code>167036a08ef4</code> base <code>e9024f1a07d2</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Capture the machine version into your dotfiles repo and commit it.</p><p class="cmd"><code>dotdrift capture --only .badfence</code></p><p class="withheld">content withheld: not listed in quotable</p></article><article class="f warn"><header><span class="sev">WARN</span><code>.badfence</code><span class="status">local_fence_error</span></header><p class="summary">machine-local fence markers are unbalanced, so the whole file was compared</p><p class="meta">repo <code>e9024f1a07d2</code> home <code>167036a08ef4</code> base <code>e9024f1a07d2</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>none</b></p><p class="action">Close the marker. Until then the local block is not being skipped.</p><p class="cmd"><code>dotdrift check --only .badfence</code></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.config/apprc</code><span class="status">local_edit</span></header><p class="summary">changed on this machine since the last sync, repo untouched</p><p class="meta">repo <code>c6333988cefd</code> home <code>39d4d4191c97</code> base <code>c6333988cefd</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Capture the machine version into your dotfiles repo and commit it.</p><p class="cmd"><code>dotdrift capture --only .config/apprc</code></p><div class="quote"><p class="redact">redactor fired: github-token</p><pre>--- repo/.config/apprc
++++ home/.config/apprc
+@@ -1,4 +1,5 @@
+ [app]
+-theme = dark
++theme = light
+ refresh = 30
++github_token = [REDACTED:github-token]
+ </pre></div></article><article class="f warn"><header><span class="sev">WARN</span><code>.config/blockrc</code><span class="status">local_edit</span></header><p class="summary">changed on this machine since the last sync, repo untouched</p><p class="meta">repo <code>e163c388e0af</code> home <code>2affe8bf525b</code> base <code>e163c388e0af</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Capture the machine version into your dotfiles repo and commit it.</p><p class="cmd"><code>dotdrift capture --only .config/blockrc</code></p><div class="quote"><pre>--- repo/.config/blockrc
++++ home/.config/blockrc
+@@ -1,5 +1,5 @@
+ [svc]
+-timeout = 30
++timeout = 60
+ [dotdrift:local-block:0]
+ retries = 3
+ </pre></div></article><article class="f warn"><header><span class="sev">WARN</span><code>.config/removed-upstream.conf</code><span class="status">missing_in_repo</span></header><p class="summary">the repo no longer carries this file but the machine still has it</p><p class="meta">repo <code>-</code> home <code>0be8f68afa3f</code> base <code>0be8f68afa3f</code> &middot; kind repo/home/base <code>missing/file/file</code> &middot; direction <b>repo_ahead</b></p><p class="action">Confirm the removal was intended before deleting the live file.</p><p class="cmd"><code>dotdrift sync --only .config/removed-upstream.conf</code></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.gitconfig</code><span class="status">local_edit</span></header><p class="summary">changed on this machine since the last sync, repo untouched</p><p class="meta">repo <code>b02d828b840c</code> home <code>d49d14589daa</code> base <code>b02d828b840c</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Capture the machine version into your dotfiles repo and commit it.</p><p class="cmd"><code>dotdrift capture --only .gitconfig</code></p><div class="quote"><pre>--- repo/.gitconfig
++++ home/.gitconfig
+@@ -4,4 +4,5 @@
+ 	defaultBranch = main
+ [alias]
+ 	st = status --short
++	lg = log --oneline --graph --decorate
+ </pre></div></article><article class="f warn"><header><span class="sev">WARN</span><code>.inputrc</code><span class="status">missing_locally</span></header><p class="summary">tracked file is gone from the machine</p><p class="meta">repo <code>fa1ef82e392a</code> home <code>-</code> base <code>fa1ef82e392a</code> &middot; kind repo/home/base <code>file/missing/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">If you deleted it on purpose, drop it from the repo. Otherwise reinstall it.</p><p class="cmd"><code>dotdrift apply --only .inputrc --yes</code></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.newfile-from-repo</code><span class="status">never_installed</span></header><p class="summary">the repo carries this file and the machine has never had it</p><p class="meta">repo <code>b502b0103b9b</code> home <code>-</code> base <code>-</code> &middot; kind repo/home/base <code>file/missing/-</code> &middot; direction <b>repo_ahead</b></p><p class="action">Install it from the repo.</p><p class="cmd"><code>dotdrift apply --only .newfile-from-repo --yes</code></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.npmrc</code><span class="status">local_edit</span></header><p class="summary">changed on this machine since the last sync, repo untouched</p><p class="meta">repo <code>0473a9039f8f</code> home <code>1e108ce46d49</code> base <code>0473a9039f8f</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>machine_ahead</b></p><p class="action">Capture the machine version into your dotfiles repo and commit it.</p><p class="cmd"><code>dotdrift capture --only .npmrc</code></p><p class="withheld">content withheld: denylisted by &#x27;.npmrc&#x27;</p></article><article class="f warn"><header><span class="sev">WARN</span><code>.ssh/id_ed25519</code><span class="status">missing_in_repo</span></header><p class="summary">the repo no longer carries this file but the machine still has it</p><p class="meta">repo <code>-</code> home <code>5f571e0c8680</code> base <code>5f571e0c8680</code> &middot; kind repo/home/base <code>missing/file/file</code> &middot; direction <b>repo_ahead</b></p><p class="action">Confirm the removal was intended before deleting the live file.</p><p class="cmd"><code>dotdrift sync --only .ssh/id_ed25519</code></p></article><article class="f warn"><header><span class="sev">WARN</span><code>.vimrc</code><span class="status">upstream_change</span></header><p class="summary">changed in the repo since the last sync, machine untouched</p><p class="meta">repo <code>e5954be5e617</code> home <code>129a4b0e0d59</code> base <code>129a4b0e0d59</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>repo_ahead</b></p><p class="action">Apply the repo version to the machine. A backup of the live file is written first.</p><p class="cmd"><code>dotdrift apply --only .vimrc --yes</code> <span class="destr">overwrites the live file</span></p><p class="withheld">content withheld: not listed in quotable</p></article><article class="f info"><header><span class="sev">INFO</span><code>.config/newtool.conf</code><span class="status">untracked_added</span></header><p class="summary">new file in a tracked directory, never opened by dotdrift</p><p class="meta">repo <code>-</code> home <code>not read</code> base <code>-</code> &middot; kind repo/home/base <code>missing/file/-</code> &middot; direction <b>machine_ahead</b></p><p class="action">Add it to the repo if it should be tracked, or add it to `ignore`.</p><p class="cmd"><code>dotdrift capture --only .config/newtool.conf</code></p></article><article class="f info"><header><span class="sev">INFO</span><code>.converged.conf</code><span class="status">converged</span></header><p class="summary">both sides changed since the last sync and now agree</p><p class="meta">repo <code>e44b99bc2fab</code> home <code>e44b99bc2fab</code> base <code>9259f773c285</code> &middot; kind repo/home/base <code>file/file/file</code> &middot; direction <b>none</b></p><p class="action">Nothing to do beyond refreshing the baseline.</p><p class="cmd"><code>dotdrift sync --only .converged.conf</code></p><p class="withheld">content withheld: not listed in quotable</p></article><article class="f info"><header><span class="sev">INFO</span><code>.gone-everywhere</code><span class="status">missing_both</span></header><p class="summary">baseline mentions a file that neither side has</p><p class="meta">repo <code>-</code> home <code>-</code> base <code>255d0ff8f619</code> &middot; kind repo/home/base <code>missing/missing/file</code> &middot; direction <b>none</b></p><p class="action">Stale baseline entry, refresh it.</p><p class="cmd"><code>dotdrift sync</code></p></article>
+<section id="ignored"><h2>Ignored as noise</h2><ul><li><code>.editorconfig</code> line endings or the trailing newline differ, nothing else does</li><li><code>.profile</code> differs only inside your machine-local fence markers</li></ul><p class="hint">Re-run with <code>--no-normalize</code> to treat line-ending noise as drift.</p></section>
+<section id="quoting"><h2>Quoting decisions</h2><ul><li>denylist_globs: 68</li><li>mode: content shown only for quotable paths</li><li>normalize_eol: True</li><li>quotable_globs: 5</li><li>strip_local_blocks: True</li></ul></section>
+<section><h2>Raw JSON</h2>
+<details><summary>the same report as machine-readable output</summary>
+<pre>{
+  &quot;baseline&quot;: {
+    &quot;entries&quot;: 19,
+    &quot;present&quot;: true,
+    &quot;synced_at&quot;: &quot;2026-02-14T09:30:00Z&quot;
+  },
+  &quot;checked&quot;: 21,
+  &quot;findings&quot;: [
+    {
+      &quot;action&quot;: &quot;Point it back inside the tracked tree, or add it to `ignore`.&quot;,
+      &quot;command&quot;: &quot;dotdrift deny &#x27;.config/escape.conf&#x27;&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;86bcf762fd24&quot;,
+        &quot;base_kind&quot;: &quot;symlink&quot;,
+        &quot;base_link_target&quot;: &quot;../../repo/home/.config/escape.conf&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;-&quot;,
+        &quot;home_kind&quot;: &quot;symlink&quot;,
+        &quot;home_link_target&quot;: &quot;../../outside/not-yours.txt&quot;,
+        &quot;home_mode&quot;: &quot;----&quot;,
+        &quot;repo_hash&quot;: &quot;86bcf762fd24&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;,
+        &quot;resolved_outside&quot;: true
+      },
+      &quot;direction&quot;: &quot;unknown&quot;,
+      &quot;path&quot;: &quot;.config/escape.conf&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;symlink_escape&quot;,
+      &quot;summary&quot;: &quot;symlink resolves outside the home and repo roots, so it was NOT read&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Inspect both sides yourself. dotdrift will not guess a direction without a baseline.&quot;,
+      &quot;command&quot;: &quot;dotdrift check --only .no-baseline.conf --quote&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;-&quot;,
+        &quot;base_kind&quot;: null,
+        &quot;base_mode&quot;: null,
+        &quot;home_hash&quot;: &quot;9f621742d556&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;6702989ef95f&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;unknown&quot;,
+      &quot;path&quot;: &quot;.no-baseline.conf&quot;,
+      &quot;quote&quot;: {
+        &quot;reason&quot;: &quot;not listed in quotable&quot;,
+        &quot;shown&quot;: false
+      },
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;unsynced_differs&quot;,
+      &quot;summary&quot;: &quot;repo and machine differ and there is no baseline to say which is newer&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Tighten the mode. ssh refuses to use a config or key that others can read.&quot;,
+      &quot;command&quot;: &quot;chmod go-rwx &lt;path&gt;&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;forbidden_bits&quot;: &quot;0077&quot;,
+        &quot;home_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;offending_bits&quot;: &quot;0044&quot;,
+        &quot;policy&quot;: &quot;.ssh/config&quot;,
+        &quot;repo_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;none&quot;,
+      &quot;path&quot;: &quot;.ssh/config&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;insecure_mode&quot;,
+      &quot;summary&quot;: &quot;permissions are looser than this kind of file allows&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Restore the recorded mode, or sync if the new mode is intended.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .ssh/config --yes&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;from_mode&quot;: &quot;0600&quot;,
+        &quot;home_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;looser&quot;: true,
+        &quot;repo_hash&quot;: &quot;dcb1ac195d3f&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;,
+        &quot;to_mode&quot;: &quot;0644&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.ssh/config&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;mode_drift&quot;,
+      &quot;summary&quot;: &quot;permission bits changed since the last sync&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Tighten the mode. ssh refuses to use a config or key that others can read.&quot;,
+      &quot;command&quot;: &quot;chmod go-rwx &lt;path&gt;&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;forbidden_bits&quot;: &quot;0077&quot;,
+        &quot;home_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;offending_bits&quot;: &quot;0044&quot;,
+        &quot;policy&quot;: &quot;.ssh/id_*&quot;,
+        &quot;repo_hash&quot;: &quot;-&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;
+      },
+      &quot;direction&quot;: &quot;none&quot;,
+      &quot;path&quot;: &quot;.ssh/id_ed25519&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;insecure_mode&quot;,
+      &quot;summary&quot;: &quot;permissions are looser than this kind of file allows&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Restore the recorded mode, or sync if the new mode is intended.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .ssh/id_ed25519 --yes&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;from_mode&quot;: &quot;0600&quot;,
+        &quot;home_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;looser&quot;: true,
+        &quot;repo_hash&quot;: &quot;-&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;,
+        &quot;to_mode&quot;: &quot;0644&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.ssh/id_ed25519&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;mode_drift&quot;,
+      &quot;summary&quot;: &quot;permission bits changed since the last sync&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Merge by hand. Do not restore from the repo, that would discard the machine edit.&quot;,
+      &quot;command&quot;: &quot;dotdrift check --only .tmux.conf --quote&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;722ca6a8b432&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;ffd042852cf1&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;970877cab0d0&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;diverged&quot;,
+      &quot;path&quot;: &quot;.tmux.conf&quot;,
+      &quot;quote&quot;: {
+        &quot;diff&quot;: [
+          &quot;--- repo/.tmux.conf&quot;,
+          &quot;+++ home/.tmux.conf&quot;,
+          &quot;@@ -1,4 +1,4 @@&quot;,
+          &quot; set -g mouse on&quot;,
+          &quot;-set -g history-limit 50000&quot;,
+          &quot;-set -g base-index 1&quot;,
+          &quot;+set -g history-limit 5000&quot;,
+          &quot;+set -g status-position top&quot;,
+          &quot; &quot;
+        ],
+        &quot;reason&quot;: &quot;matched quotable &#x27;.tmux.conf&#x27;&quot;,
+        &quot;redacted&quot;: false,
+        &quot;redaction_labels&quot;: [],
+        &quot;shown&quot;: true,
+        &quot;truncated&quot;: false
+      },
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;status&quot;: &quot;conflict&quot;,
+      &quot;summary&quot;: &quot;both sides changed since the last sync and they no longer agree&quot;
+    },
+    {
+      &quot;action&quot;: &quot;An installer overwrote the link. Re-link it so repo changes reach this machine again.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .aliases --yes&quot;,
+      &quot;destructive&quot;: true,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;b4716459c6d0&quot;,
+        &quot;base_kind&quot;: &quot;symlink&quot;,
+        &quot;base_link_target&quot;: &quot;../repo/home/.aliases&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;b4716459c6d0&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;b4716459c6d0&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.aliases&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;symlink_replaced_by_copy&quot;,
+      &quot;summary&quot;: &quot;was a symlink into the repo at last sync, now a regular file. Content still matches the repo, so nothing is lost yet, but future repo changes will no longer reach this machine.&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Capture the machine version into your dotfiles repo and commit it.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .badfence&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;e9024f1a07d2&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;167036a08ef4&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;e9024f1a07d2&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.badfence&quot;,
+      &quot;quote&quot;: {
+        &quot;reason&quot;: &quot;not listed in quotable&quot;,
+        &quot;shown&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_edit&quot;,
+      &quot;summary&quot;: &quot;changed on this machine since the last sync, repo untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Close the marker. Until then the local block is not being skipped.&quot;,
+      &quot;command&quot;: &quot;dotdrift check --only .badfence&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;e9024f1a07d2&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;errors&quot;: [
+          &quot;unclosed_local_fence&quot;
+        ],
+        &quot;home_hash&quot;: &quot;167036a08ef4&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;e9024f1a07d2&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;,
+        &quot;side&quot;: &quot;home&quot;
+      },
+      &quot;direction&quot;: &quot;none&quot;,
+      &quot;path&quot;: &quot;.badfence&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_fence_error&quot;,
+      &quot;summary&quot;: &quot;machine-local fence markers are unbalanced, so the whole file was compared&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Capture the machine version into your dotfiles repo and commit it.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .config/apprc&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;c6333988cefd&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;39d4d4191c97&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;c6333988cefd&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.config/apprc&quot;,
+      &quot;quote&quot;: {
+        &quot;diff&quot;: [
+          &quot;--- repo/.config/apprc&quot;,
+          &quot;+++ home/.config/apprc&quot;,
+          &quot;@@ -1,4 +1,5 @@&quot;,
+          &quot; [app]&quot;,
+          &quot;-theme = dark&quot;,
+          &quot;+theme = light&quot;,
+          &quot; refresh = 30&quot;,
+          &quot;+github_token = [REDACTED:github-token]&quot;,
+          &quot; &quot;
+        ],
+        &quot;reason&quot;: &quot;matched quotable &#x27;.config/apprc&#x27;&quot;,
+        &quot;redacted&quot;: true,
+        &quot;redaction_labels&quot;: [
+          &quot;github-token&quot;
+        ],
+        &quot;shown&quot;: true,
+        &quot;truncated&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_edit&quot;,
+      &quot;summary&quot;: &quot;changed on this machine since the last sync, repo untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Capture the machine version into your dotfiles repo and commit it.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .config/blockrc&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;e163c388e0af&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;2affe8bf525b&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;e163c388e0af&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.config/blockrc&quot;,
+      &quot;quote&quot;: {
+        &quot;diff&quot;: [
+          &quot;--- repo/.config/blockrc&quot;,
+          &quot;+++ home/.config/blockrc&quot;,
+          &quot;@@ -1,5 +1,5 @@&quot;,
+          &quot; [svc]&quot;,
+          &quot;-timeout = 30&quot;,
+          &quot;+timeout = 60&quot;,
+          &quot; [dotdrift:local-block:0]&quot;,
+          &quot; retries = 3&quot;,
+          &quot; &quot;
+        ],
+        &quot;reason&quot;: &quot;matched quotable &#x27;.config/blockrc&#x27;&quot;,
+        &quot;redacted&quot;: false,
+        &quot;redaction_labels&quot;: [],
+        &quot;shown&quot;: true,
+        &quot;truncated&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_edit&quot;,
+      &quot;summary&quot;: &quot;changed on this machine since the last sync, repo untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Confirm the removal was intended before deleting the live file.&quot;,
+      &quot;command&quot;: &quot;dotdrift sync --only .config/removed-upstream.conf&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;0be8f68afa3f&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;0be8f68afa3f&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;-&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;
+      },
+      &quot;direction&quot;: &quot;repo_ahead&quot;,
+      &quot;path&quot;: &quot;.config/removed-upstream.conf&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;missing_in_repo&quot;,
+      &quot;summary&quot;: &quot;the repo no longer carries this file but the machine still has it&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Capture the machine version into your dotfiles repo and commit it.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .gitconfig&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;b02d828b840c&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;d49d14589daa&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;b02d828b840c&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.gitconfig&quot;,
+      &quot;quote&quot;: {
+        &quot;diff&quot;: [
+          &quot;--- repo/.gitconfig&quot;,
+          &quot;+++ home/.gitconfig&quot;,
+          &quot;@@ -4,4 +4,5 @@&quot;,
+          &quot; \tdefaultBranch = main&quot;,
+          &quot; [alias]&quot;,
+          &quot; \tst = status --short&quot;,
+          &quot;+\tlg = log --oneline --graph --decorate&quot;,
+          &quot; &quot;
+        ],
+        &quot;reason&quot;: &quot;matched quotable &#x27;.gitconfig&#x27;&quot;,
+        &quot;redacted&quot;: false,
+        &quot;redaction_labels&quot;: [],
+        &quot;shown&quot;: true,
+        &quot;truncated&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_edit&quot;,
+      &quot;summary&quot;: &quot;changed on this machine since the last sync, repo untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;If you deleted it on purpose, drop it from the repo. Otherwise reinstall it.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .inputrc --yes&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;fa1ef82e392a&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;-&quot;,
+        &quot;home_kind&quot;: &quot;missing&quot;,
+        &quot;home_mode&quot;: &quot;----&quot;,
+        &quot;repo_hash&quot;: &quot;fa1ef82e392a&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.inputrc&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;missing_locally&quot;,
+      &quot;summary&quot;: &quot;tracked file is gone from the machine&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Install it from the repo.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .newfile-from-repo --yes&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;-&quot;,
+        &quot;base_kind&quot;: null,
+        &quot;base_mode&quot;: null,
+        &quot;home_hash&quot;: &quot;-&quot;,
+        &quot;home_kind&quot;: &quot;missing&quot;,
+        &quot;home_mode&quot;: &quot;----&quot;,
+        &quot;repo_hash&quot;: &quot;b502b0103b9b&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;repo_ahead&quot;,
+      &quot;path&quot;: &quot;.newfile-from-repo&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;never_installed&quot;,
+      &quot;summary&quot;: &quot;the repo carries this file and the machine has never had it&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Capture the machine version into your dotfiles repo and commit it.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .npmrc&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;0473a9039f8f&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;home_hash&quot;: &quot;1e108ce46d49&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0600&quot;,
+        &quot;repo_hash&quot;: &quot;0473a9039f8f&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.npmrc&quot;,
+      &quot;quote&quot;: {
+        &quot;reason&quot;: &quot;denylisted by &#x27;.npmrc&#x27;&quot;,
+        &quot;shown&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;local_edit&quot;,
+      &quot;summary&quot;: &quot;changed on this machine since the last sync, repo untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Confirm the removal was intended before deleting the live file.&quot;,
+      &quot;command&quot;: &quot;dotdrift sync --only .ssh/id_ed25519&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0600&quot;,
+        &quot;home_hash&quot;: &quot;5f571e0c8680&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;-&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;
+      },
+      &quot;direction&quot;: &quot;repo_ahead&quot;,
+      &quot;path&quot;: &quot;.ssh/id_ed25519&quot;,
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;missing_in_repo&quot;,
+      &quot;summary&quot;: &quot;the repo no longer carries this file but the machine still has it&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Apply the repo version to the machine. A backup of the live file is written first.&quot;,
+      &quot;command&quot;: &quot;dotdrift apply --only .vimrc --yes&quot;,
+      &quot;destructive&quot;: true,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;129a4b0e0d59&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;129a4b0e0d59&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;e5954be5e617&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;repo_ahead&quot;,
+      &quot;path&quot;: &quot;.vimrc&quot;,
+      &quot;quote&quot;: {
+        &quot;reason&quot;: &quot;not listed in quotable&quot;,
+        &quot;shown&quot;: false
+      },
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;status&quot;: &quot;upstream_change&quot;,
+      &quot;summary&quot;: &quot;changed in the repo since the last sync, machine untouched&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Add it to the repo if it should be tracked, or add it to `ignore`.&quot;,
+      &quot;command&quot;: &quot;dotdrift capture --only .config/newtool.conf&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_kind&quot;: null,
+        &quot;home_hash&quot;: &quot;not read&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;
+      },
+      &quot;direction&quot;: &quot;machine_ahead&quot;,
+      &quot;path&quot;: &quot;.config/newtool.conf&quot;,
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;status&quot;: &quot;untracked_added&quot;,
+      &quot;summary&quot;: &quot;new file in a tracked directory, never opened by dotdrift&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Nothing to do beyond refreshing the baseline.&quot;,
+      &quot;command&quot;: &quot;dotdrift sync --only .converged.conf&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;9259f773c285&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;e44b99bc2fab&quot;,
+        &quot;home_kind&quot;: &quot;file&quot;,
+        &quot;home_mode&quot;: &quot;0644&quot;,
+        &quot;repo_hash&quot;: &quot;e44b99bc2fab&quot;,
+        &quot;repo_kind&quot;: &quot;file&quot;
+      },
+      &quot;direction&quot;: &quot;none&quot;,
+      &quot;path&quot;: &quot;.converged.conf&quot;,
+      &quot;quote&quot;: {
+        &quot;reason&quot;: &quot;not listed in quotable&quot;,
+        &quot;shown&quot;: false
+      },
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;status&quot;: &quot;converged&quot;,
+      &quot;summary&quot;: &quot;both sides changed since the last sync and now agree&quot;
+    },
+    {
+      &quot;action&quot;: &quot;Stale baseline entry, refresh it.&quot;,
+      &quot;command&quot;: &quot;dotdrift sync&quot;,
+      &quot;destructive&quot;: false,
+      &quot;detail&quot;: {
+        &quot;base_hash&quot;: &quot;255d0ff8f619&quot;,
+        &quot;base_kind&quot;: &quot;file&quot;,
+        &quot;base_mode&quot;: &quot;0644&quot;,
+        &quot;home_hash&quot;: &quot;-&quot;,
+        &quot;home_kind&quot;: &quot;missing&quot;,
+        &quot;home_mode&quot;: &quot;----&quot;,
+        &quot;repo_hash&quot;: &quot;-&quot;,
+        &quot;repo_kind&quot;: &quot;missing&quot;
+      },
+      &quot;direction&quot;: &quot;none&quot;,
+      &quot;path&quot;: &quot;.gone-everywhere&quot;,
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;status&quot;: &quot;missing_both&quot;,
+      &quot;summary&quot;: &quot;baseline mentions a file that neither side has&quot;
+    }
+  ],
+  &quot;home&quot;: &quot;&lt;synthetic fixture home&gt;&quot;,
+  &quot;ignored&quot;: [
+    {
+      &quot;note&quot;: &quot;line endings or the trailing newline differ, nothing else does&quot;,
+      &quot;path&quot;: &quot;.editorconfig&quot;,
+      &quot;reasons&quot;: [
+        &quot;eol_only&quot;
+      ]
+    },
+    {
+      &quot;note&quot;: &quot;differs only inside your machine-local fence markers&quot;,
+      &quot;path&quot;: &quot;.profile&quot;,
+      &quot;reasons&quot;: [
+        &quot;local_block_only&quot;
+      ]
+    }
+  ],
+  &quot;quoting&quot;: {
+    &quot;denylist_globs&quot;: 68,
+    &quot;mode&quot;: &quot;content shown only for quotable paths&quot;,
+    &quot;normalize_eol&quot;: true,
+    &quot;quotable_globs&quot;: 5,
+    &quot;strip_local_blocks&quot;: true
+  },
+  &quot;repo&quot;: &quot;&lt;synthetic fixture dotfiles repo&gt;&quot;,
+  &quot;severity_counts&quot;: {
+    &quot;high&quot;: 7,
+    &quot;info&quot;: 3,
+    &quot;warn&quot;: 12
+  },
+  &quot;status_counts&quot;: {
+    &quot;conflict&quot;: 1,
+    &quot;converged&quot;: 1,
+    &quot;insecure_mode&quot;: 2,
+    &quot;local_edit&quot;: 5,
+    &quot;local_fence_error&quot;: 1,
+    &quot;missing_both&quot;: 1,
+    &quot;missing_in_repo&quot;: 2,
+    &quot;missing_locally&quot;: 1,
+    &quot;mode_drift&quot;: 2,
+    &quot;never_installed&quot;: 1,
+    &quot;symlink_escape&quot;: 1,
+    &quot;symlink_replaced_by_copy&quot;: 1,
+    &quot;unsynced_differs&quot;: 1,
+    &quot;untracked_added&quot;: 1,
+    &quot;upstream_change&quot;: 1
+  },
+  &quot;tool&quot;: &quot;dotdrift&quot;,
+  &quot;unchanged&quot;: 4,
+  &quot;version&quot;: &quot;0.1.0&quot;,
+  &quot;warnings&quot;: []
+}</pre></details></section>
+<footer>dotdrift is a local tool. It sends nothing anywhere. This page is regenerated by
+<code>scripts/build_docs.py</code> and <code>scripts/verify.sh</code> fails if it is stale.</footer>
+</main>
+</body>
+</html>
