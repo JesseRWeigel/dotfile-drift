@@ -25,9 +25,19 @@ _XOX = "xox" + "[abprs]" + "-"
 _PEM = "-----" + "BEGIN" + " [A-Z ]{0,24}PRIVATE KEY" + "-----"
 _SLACKHOOK = "hooks\\." + "slack\\.com/services/"
 _B64 = "[A-Za-z0-9/+=]"
+# JWTs are base64URL, which swaps + and / for - and _. Using the plain base64 class
+# here stopped the match at the first - or _ in the signature and left a tail in the
+# clear, which looks redacted and is not.
+_B64URL = "[A-Za-z0-9_=-]"
 _HEX = "[0-9a-fA-F]"
 
-# (label, compiled pattern). Order matters only for readability of the label.
+# (label, compiled pattern). ORDER MATTERS, and getting it wrong leaks.
+#
+# `bearer-token` used to sit above `jwt`, and _B64 excludes the dot, so a `Bearer eyJ...` header
+# had only its FIRST segment redacted. The payload survived in the clear and decoded to
+# {"sub":"1234567890","name":"Jane Patient"}, with the signature beside it. A partial redaction on
+# a credential reads as a redaction and is not one. The most specific pattern goes first, and the
+# bearer pattern now spans dots so either one catches the whole token.
 PATTERNS = [
     ("aws-access-key-id", re.compile(_A + "[0-9A-Z]{16}")),
     ("github-token", re.compile(_GH + "[A-Za-z0-9]{36,}")),
@@ -37,9 +47,9 @@ PATTERNS = [
     ("slack-token", re.compile(_XOX + "[A-Za-z0-9-]{10,}")),
     ("private-key-block", re.compile(_PEM)),
     ("slack-webhook", re.compile(_SLACKHOOK + "[A-Za-z0-9/]{10,}")),
-    ("bearer-token", re.compile("(?i)\\b" + "bearer" + "\\s+" + _B64 + "{20,}")),
     ("basic-auth-url", re.compile("://[^/\\s:@]{1,64}:[^/\\s@]{3,}@")),
-    ("jwt", re.compile("eyJ" + _B64 + "{10,}\\." + "eyJ" + _B64 + "{10,}\\." + _B64 + "{10,}")),
+    ("jwt", re.compile("eyJ" + _B64URL + "{10,}\\." + "eyJ" + _B64URL + "{10,}\\." + _B64URL + "{10,}")),
+    ("bearer-token", re.compile("(?i)\\b" + "bearer" + "\\s+" + "[A-Za-z0-9._~+/=-]" + "{20,}")),
 ]
 
 # Keys whose value is redacted whole, regardless of what the value looks like.

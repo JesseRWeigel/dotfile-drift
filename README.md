@@ -141,7 +141,7 @@ An example report over that same fixture home is published at `docs/index.html`.
 bash scripts/verify.sh
 ```
 
-Its exit code is the result. Twelve checks over 153 unit tests, and a step that cannot run
+Its exit code is the result. Twelve checks over 158 unit tests, and a step that cannot run
 is a failure rather than a skip. It digests every tracked file before and after and fails if
 the run modified the tree. The test count in that sentence is asserted against the runner on
 every run, so it cannot go stale silently.
@@ -172,9 +172,10 @@ while the unit suite fails.
 
 ## Status
 
-Real pasted output of `bash scripts/verify.sh`, run from a clean shell.
+Pasted output of `bash scripts/verify.sh`, exit 0, run 2026-08-07.
 
 ```
+$ bash scripts/verify.sh
 dotdrift verify
 repo ~/Projects/thousand/projects/dotfile-drift
 77 tracked files digested before the run
@@ -185,10 +186,10 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 153 tests in 0.403s
+Ran 158 tests in 0.408s
 
 OK
-153 tests, and README.md agrees
+158 tests, and README.md agrees
 ok   unit tests
 
 === end to end over the fixture ===

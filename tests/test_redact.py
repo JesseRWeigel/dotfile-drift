@@ -120,3 +120,52 @@ class TestCaseSensitivity(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class JwtIsRedactedWhole(unittest.TestCase):
+    """A partial redaction on a credential reads as a redaction and is not one.
+
+    Two real defects lived here. `bearer-token` was ordered above `jwt` and its character class
+    excluded the dot, so `Bearer eyJ...` had only its header segment replaced and the payload
+    survived in the clear. Then the jwt pattern itself used the plain base64 class, so it stopped
+    at the first `-` or `_` in a base64url signature and left a tail behind.
+    """
+
+    # Assembled so no complete credential-shaped literal sits on disk in this repository.
+    HEADER = "eyJ" + "hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    PAYLOAD = "eyJ" + "zdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkphbmUgUGF0aWVudCJ9"
+    SIGNATURE = "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV" + "_adQssw5c"
+    JWT = f"{HEADER}.{PAYLOAD}.{SIGNATURE}"
+
+    def assert_nothing_survives(self, line):
+        out, found = redact.redact_line(line)
+        self.assertTrue(found, f"nothing was redacted in {line!r}")
+        for fragment in (self.HEADER[:10], self.PAYLOAD[:10], self.SIGNATURE[:10],
+                         self.SIGNATURE[-8:]):
+            self.assertNotIn(fragment, out,
+                             f"{fragment!r} survived redaction in {out!r}")
+
+    def test_behind_a_bearer_header(self):
+        self.assert_nothing_survives("Authorization: Bearer " + self.JWT)
+
+    def test_bare_in_a_config_value(self):
+        self.assert_nothing_survives("token: " + self.JWT)
+
+    def test_the_signature_tail_does_not_survive(self):
+        # base64url, so the signature ends in characters the plain base64 class does not match.
+        out, _ = redact.redact_line("token: " + self.JWT)
+        self.assertNotIn("_adQssw5c", out)
+
+    def test_an_opaque_bearer_token_is_still_caught(self):
+        # The negative control for the reordering: a bearer token that is not a JWT must still be
+        # redacted by the bearer pattern, which now sits below jwt.
+        out, found = redact.redact_line("Authorization: Bearer " + "A" * 40)
+        self.assertIn("bearer-token", found)
+        self.assertNotIn("A" * 40, out)
+
+    def test_ordinary_dotfile_lines_are_left_alone(self):
+        # Widening the bearer class to span dots could have started matching prose. It did not.
+        for line in ("export EDITOR=vim", "Host github.com", "  IdentityFile ~/.ssh/id_ed25519",
+                     "alias gs='git status'", "[user]", "  name = A Person", "set -o vi"):
+            with self.subTest(line):
+                self.assertEqual(redact.redact_line(line)[0], line)
