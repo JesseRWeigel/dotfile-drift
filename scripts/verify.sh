@@ -29,6 +29,23 @@ PASS=0
 FAIL=0
 FAILED_STEPS=()
 
+# One scratch directory for the whole run, cleaned once on exit.
+#
+# The first version of this script gave each step its own `trap 'rm -rf "$tmp"'
+# RETURN`. A bash RETURN trap is not scoped to the function that set it, so the
+# trap outlived its function and fired inside an unrelated one, where `tmp` was
+# unbound and `set -u` turned a cleanup into a spurious failure. One trap at the
+# top has no such edge.
+SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/dotdrift-verify-XXXXXX")" || exit 2
+trap 'rm -rf "$SCRATCH"' EXIT
+
+scratch() {
+  local d="$SCRATCH/$1"
+  rm -rf "$d"
+  mkdir -p "$d"
+  printf '%s' "$d"
+}
+
 # Collapse $HOME to a tilde. The replacement needs the BACKSLASH: bash
 # tilde-expands the replacement in ${var/#$HOME/~} so the unescaped form
 # substitutes $HOME for $HOME and silently does nothing. Verify output is pasted
@@ -141,8 +158,7 @@ end_to_end() {
   # is the correct answer for a fixture built to contain drift. Exit 0 there
   # would mean the tool went blind.
   local tmp rc
-  tmp="$(mktemp -d)" || return 1
-  trap 'rm -rf "$tmp"' RETURN
+  tmp="$(scratch e2e)" || return 1
 
   python3 scripts/fixture_home.py "$tmp/fx" >/dev/null || return 1
 
@@ -163,6 +179,12 @@ end_to_end() {
   mkdir -p "$tmp/clean/home" "$tmp/clean/repo" "$tmp/clean/state"
   cp -r "$tmp/fx/repo/home/." "$tmp/clean/home/"
   cp -r "$tmp/fx/repo/." "$tmp/clean/repo/"
+  # cp gives everything 0644, and `insecure_mode` is a standing policy finding
+  # rather than a drift finding, so it fires on a converged tree too. That is the
+  # tool being right. Set the mode ssh actually demands so this control tests
+  # convergence and not the permission policy, which has its own coverage.
+  chmod 700 "$tmp/clean/home/.ssh"
+  chmod 600 "$tmp/clean/home/.ssh/config"
   python3 bin/dotdrift sync --home "$tmp/clean/home" --repo "$tmp/clean/repo" \
     --state "$tmp/clean/state" >/dev/null || return 1
   python3 bin/dotdrift check --home "$tmp/clean/home" --repo "$tmp/clean/repo" \
@@ -192,8 +214,7 @@ end_to_end() {
 quoting_posture() {
   # The privacy promise, asserted against the real CLI rather than a unit test.
   local tmp out rc=0
-  tmp="$(mktemp -d)" || return 1
-  trap 'rm -rf "$tmp"' RETURN
+  tmp="$(scratch quoting)" || return 1
   python3 scripts/fixture_home.py "$tmp/fx" >/dev/null || return 1
 
   # 1. Without --quote nothing is quoted at all.

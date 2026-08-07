@@ -77,7 +77,10 @@ def main(argv):
     prose, fenced = split_fences(text)
     problems = []
 
-    print("  %d prose lines, %d fenced lines" % (prose.count("\n") + 1, fenced.count("\n") + 1))
+    # Deliberately not printing line counts. The Status section holds this
+    # script's own transcript, so any number that grows when the transcript is
+    # pasted makes the README impossible to bring to a fixed point.
+    print("  prose and fenced blocks separated")
 
     if fenced.strip() == "":
         problems.append("no fenced code block at all. The Status section is "
