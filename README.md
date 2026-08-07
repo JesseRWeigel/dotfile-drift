@@ -185,10 +185,10 @@ dotdrift imports 12 stdlib modules and nothing else
 ok   preflight
 
 === unit tests ===
-Ran 148 tests in 0.414s
+Ran 153 tests in 0.403s
 
 OK
-148 tests, and README.md agrees
+153 tests, and README.md agrees
 ok   unit tests
 
 === end to end over the fixture ===
@@ -274,36 +274,40 @@ baseline: fingerprint the unmodified project in place
 NULL CONTROL: an untouched copy in a different directory must match
    ok, all 2 measurement set(s) reproduce exactly. Gate 2 measures the code.
 
-running 15 sabotage(s)
-   1/15 direction-flip               [attack]
+running 17 sabotage(s)
+   1/17 direction-flip               [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   2/15 ignore-the-baseline          [attack]
+   2/17 ignore-the-baseline          [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   3/15 conflict-becomes-local-edit  [attack]
+   3/17 conflict-becomes-local-edit  [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   4/15 symlink-blindness            [attack]
+   4/17 symlink-blindness            [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   5/15 mode-blindness               [attack]
+   5/17 mode-blindness               [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   6/15 insecure-mode-blindness      [attack]
+   6/17 insecure-mode-blindness      [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-   7/15 denylist-disabled            [attack]
+   7/17 denylist-disabled            [attack]
       CAUGHT         caught by unit suite, docs freshness
-   8/15 quote-without-the-flag       [attack]
+   8/17 quote-without-the-flag       [attack]
       CAUGHT         caught by unit suite
-   9/15 fence-contents-leak          [attack]
+   9/17 fence-contents-leak          [attack]
       CAUGHT         caught by unit suite, docs freshness
-  10/15 follow-the-escaping-symlink  [attack]
+  10/17 follow-the-escaping-symlink  [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-  11/15 eol-noise-becomes-drift      [attack]
+  11/17 middle-symlink-read          [guard]
+      CAUGHT         output unchanged as a guard requires, and the unit suite failed
+  12/17 write-outside-the-home       [guard]
+      CAUGHT         output unchanged as a guard requires, and the unit suite failed
+  13/17 eol-noise-becomes-drift      [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-  12/15 fence-swallows-the-file      [attack]
+  14/17 fence-swallows-the-file      [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-  13/15 drift-never-exits-nonzero    [attack]
+  15/17 drift-never-exits-nonzero    [attack]
       CAUGHT         caught by unit suite
-  14/15 untracked-scan-off           [attack]
+  16/17 untracked-scan-off           [attack]
       CAUGHT         caught by unit suite, independent check, docs freshness
-  15/15 redactor-disabled            [guard]
+  17/17 redactor-disabled            [guard]
       CAUGHT         output unchanged as a guard requires, and the unit suite failed
 
 SABOTAGE                     KIND    GATE1  GATE2  GATE3  VERDICT
@@ -317,13 +321,15 @@ denylist-disabled            attack  yes    yes    yes    CAUGHT
 quote-without-the-flag       attack  yes    yes    yes    CAUGHT
 fence-contents-leak          attack  yes    yes    yes    CAUGHT
 follow-the-escaping-symlink  attack  yes    yes    yes    CAUGHT
+middle-symlink-read          guard   yes    yes    yes    CAUGHT
+write-outside-the-home       guard   yes    yes    yes    CAUGHT
 eol-noise-becomes-drift      attack  yes    yes    yes    CAUGHT
 fence-swallows-the-file      attack  yes    yes    yes    CAUGHT
 drift-never-exits-nonzero    attack  yes    yes    yes    CAUGHT
 untracked-scan-off           attack  yes    yes    yes    CAUGHT
 redactor-disabled            guard   yes    yes    yes    CAUGHT
 
-15 of 15 caught
+17 of 17 caught
 SABOTAGE RUN PASSED, every sabotage applied, moved the measured output (or stayed dormant as a guard must), and was caught
 ok   sabotage
 
