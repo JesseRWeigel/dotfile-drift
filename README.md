@@ -2,6 +2,10 @@
 
 Three-way dotfile drift detector that reports what changed without quoting your secrets.
 
+> Measurements described here were taken on one development machine: an RTX 5090 with
+> 32 GB of VRAM, 12 cores, 48 GB of RAM, running Linux under WSL2. Numbers from your own
+> hardware will differ.
+
 Catalog task: `CLI-035`. One of a public catalog of build ideas: https://github.com/JesseRWeigel/722-things-to-build
 
 ## What this is
@@ -243,7 +247,7 @@ ok   independent recomputation
    ok, git reports 77 tracked files
 3. scan for credentials and machine paths
    read 77 files (0 containing a NUL byte, scanned anyway)
-   ok, no credential-shaped string and no path from this machine
+   ok, no credential-shaped string and no path from the development machine
 4. the scan read its own source and the sabotage script
    ok, scripts/privacy_scan.py is tracked and was scanned with no exemption
    ok, scripts/sabotage.py is tracked and was scanned with no exemption
