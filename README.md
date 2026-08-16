@@ -2,6 +2,8 @@
 
 Three-way dotfile drift detector that reports what changed without quoting your secrets.
 
+**[An example report over the synthetic fixture home →](https://jesserweigel.github.io/dotfile-drift/)**
+
 > Measurements described here were taken on one development machine: an RTX 5090 with
 > 32 GB of VRAM, 12 cores, 48 GB of RAM, running Linux under WSL2. Numbers from your own
 > hardware will differ.
